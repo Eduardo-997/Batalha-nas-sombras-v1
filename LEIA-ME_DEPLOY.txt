@@ -1,39 +1,33 @@
-BATALHA NAS SOMBRAS — v1.15.10 — GIT + CLOUDFLARE
+BATALHA NAS SOMBRAS — v1.15.12 — GIT + CLOUDFLARE
 
 BASE
-- Continua diretamente a v1.15.9 GIT + CLOUDFLARE.
-- Pacote preparado para substituir os arquivos do repositório e publicar pelo fluxo Cloudflare já existente.
+- Continuação da v1.15.11 ARENA BUGFIX LOCAL.
+- Inclui as correções da v1.15.11 que ainda não haviam sido publicadas e as correções novas da v1.15.12.
+- Preparado para substituir os arquivos do repositório e usar o fluxo Cloudflare já existente.
 
-MUDANÇAS DA v1.15.10
-- Arquétipos ganharam nomenclatura própria do jogo:
-  🛡️ Vanguarda / 📜 Estrategista / 🗡️ Executor / 🃏 Coringa / 🦴 Condenado.
-- Removidos da interface os nomes Pedra/Papel/Tesoura.
-- Filtros, fichas, Arena, Treino, Clássico Online e aba Regras foram atualizados.
-- Vanguarda usa 🛡️ no lugar de 🪨.
-- Executor usa 🗡️ no lugar de ✂️.
-- Regras agora explicam também Coringa e Condenado.
-
-REGRA DE CONFRONTO DIRETO
-- Vanguarda vence Executor.
-- Executor vence Estrategista.
-- Estrategista vence Vanguarda.
-- Coringa vence os demais arquétipos.
-- Condenado perde para todos os outros.
-- Iguais empatam.
+PRINCIPAIS MUDANÇAS
+- Bardo: +1 Vida temporário agora volta corretamente ao valor anterior quando a Inspiração termina e não desconta Vida duas vezes se o ponto temporário tiver sido consumido por dano.
+- Replay da Arena: correção do SVG, captura final de segurança e mensagens visíveis de erro/indisponibilidade.
+- Arena: botão Pronto, Posto 1, Posto 2 e status da preparação agora ficam numa barra imediatamente acima do tabuleiro.
+- Inclui também os bugfixes funcionais da Arena da v1.15.11 (cliques, Escudeiro, Bardo, Doppelgänger e proteção contra loop da IA).
 
 IMPORTANTE
-- Internamente o jogo continua usando R/P/S/J/C para evitar risco desnecessário de regressão.
-- A matriz de Confronto Direto não foi alterada.
-- IA, balanceamento e demais mecânicas não foram alterados.
-- O nome técnico do Worker e wrangler.jsonc continuam inalterados.
+- O marcador 💥 NÃO foi alterado nesta versão.
+- `wrangler.jsonc` está inalterado.
+- `src/worker.js` está inalterado em relação à v1.15.11.
+- O Replay da Arena online continua sendo liberado somente após o servidor confirmar o fim da partida.
 
 PUBLICAÇÃO
-- Substitua/atualize os arquivos do repositório com este pacote.
-- npm install (se necessário)
-- npm run deploy
+1. Extraia este pacote.
+2. Substitua/atualize os arquivos do repositório com o conteúdo da pasta.
+3. Faça commit/push normalmente.
+4. Se o deploy do Worker for manual:
+   npm install   (se necessário)
+   npm run deploy
 
 TESTE RECOMENDADO APÓS PUBLICAR
-1. Abrir Clássico, Online, Arena e Treino e conferir os filtros de arquétipo.
-2. Abrir fichas de personagens de cada arquétipo.
-3. Abrir Regras e conferir o novo ciclo de Confronto Direto.
-4. Fazer ao menos um Confronto Direto para confirmar o comportamento normal.
+1. Arena: montar equipe/Postos e confirmar que o botão Pronto está junto do tabuleiro.
+2. Bardo: testar +1 Vida em uma unidade ferida e conferir a expiração do bônus.
+3. Arena: concluir uma partida e abrir Ver Replay.
+4. Arena: testar Escudeiro na mesma casa de aliado e Bardo dando buff clicando diretamente no aliado.
+5. Se usar Arena online, concluir uma partida e verificar que o Replay só aparece depois do fim.

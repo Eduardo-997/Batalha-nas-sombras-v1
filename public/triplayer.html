@@ -26,6 +26,7 @@
 
 /* v1.14 */
 .roster-card{display:flex;flex-direction:column;gap:6px;cursor:pointer}.roster-pick{padding:5px 7px;font-size:11px;text-align:center}.roster-pick.selected{border-color:#a9874f;background:#302718}.tree-marker{pointer-events:none;paint-order:stroke;stroke:#050505;stroke-width:3}.tree-dead{filter:grayscale(1) brightness(.48);opacity:.92}.tri-cell.terrain{filter:brightness(.92)}
+.setup-board-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 10px;padding:10px 12px;background:linear-gradient(155deg,rgba(25,25,25,.98),rgba(14,15,16,.99));border:1px solid #5d4a31;border-radius:9px;box-shadow:0 7px 20px rgba(0,0,0,.2)}.setup-board-bar .setup-finish{margin-left:auto}.ready-near-board{min-width:112px;font-weight:800}@media(max-width:700px){.setup-board-bar{align-items:stretch}.setup-board-bar .setup-finish{margin-left:0;width:100%}.ready-near-board{margin-left:auto}}
 </style>
 <link href="ui-v1157.css" rel="stylesheet"/>
 </head><body class="mode-arena"><div class="wrap">
@@ -38,11 +39,10 @@
 <div class="roster-filters"><button class="active" data-filter="all">Todos</button><button data-filter="R">🛡️ Vanguarda</button><button data-filter="P">📜 Estrategista</button><button data-filter="S">🗡️ Executor</button><button data-filter="J">🃏 Coringa</button></div>
 <div class="roster" id="roster"></div>
 <div class="setup-inspector hidden" id="setupInspector"><div class="setup-inspector-head"><b id="setupInspectorTitle">Ficha rápida</b><span class="small muted">clique em outro personagem para comparar</span></div><div id="setupInspectorBody"></div></div>
-<div class="row setup-finish" style="margin-top:9px"><button class="setup-object" id="base1">🏰 Posto 1</button><button class="setup-object" id="base2">🏰 Posto 2</button><span class="small muted" id="setupStatus">0/4 personagens · 0/2 Postos</span><button class="primary" id="readyBtn">Pronto</button></div>
-<div class="small muted setup-help">Clique no card para consultar a ficha e use ☐ Selecionar para montar o time. Peças e Postos podem ser reposicionados nas duas fileiras de fundo.</div>
+<div class="small muted setup-help">Clique no card para consultar a ficha e use ☐ Selecionar para montar o time. As posições são ajustadas diretamente no tabuleiro abaixo.</div>
 </section>
 <div class="game-layout">
-<div><div class="boardbox"><svg class="board-svg" id="board" viewbox="-405 -355 810 710"></svg><div class="board-popup hidden" id="boardPopup"><div id="boardPopupBody"></div><div class="board-popup-actions" id="boardPopupActions"></div></div></div><div class="controls"><button id="moveBtn">👣 Mover</button><button id="stopBtn">⏹ Parar</button><button id="attackBtn">⚔️ Atacar</button><button class="primary" id="abilityBtn">✦ Habilidade</button><button id="endBtn">⌛ Encerrar</button><button id="cancelBtn">↩ Cancelar</button></div></div>
+<div><div class="setup-board-bar" id="setupBoardBar"><div><b>Preparação do tabuleiro</b><div class="small muted">Selecione os Postos, posicione tudo e confirme quando estiver pronto.</div></div><div class="row setup-finish"><button class="setup-object" id="base1">🏰 Posto 1</button><button class="setup-object" id="base2">🏰 Posto 2</button><span class="small muted" id="setupStatus">0/4 personagens · 0/2 Postos</span><button class="primary ready-near-board" id="readyBtn">✓ Pronto</button></div></div><div class="boardbox"><svg class="board-svg" id="board" viewbox="-405 -355 810 710"></svg><div class="board-popup hidden" id="boardPopup"><div id="boardPopupBody"></div><div class="board-popup-actions" id="boardPopupActions"></div></div></div><div class="controls"><button id="moveBtn">👣 Mover</button><button id="stopBtn">⏹ Parar</button><button id="attackBtn">⚔️ Atacar</button><button class="primary" id="abilityBtn">✦ Habilidade</button><button id="endBtn">⌛ Encerrar</button><button id="cancelBtn">↩ Cancelar</button></div></div>
 <aside class="side">
 <div class="notice context" id="context"><b>Contexto</b><div class="small muted" id="contextBody" style="margin-top:6px">Monte sua equipe e posicione seus Postos.</div><div id="contextActions" style="margin-top:8px"></div></div>
 <div class="panel"><div class="panel-title">FICHA</div><div class="small muted" id="pieceInfo">Clique em uma unidade.</div></div>

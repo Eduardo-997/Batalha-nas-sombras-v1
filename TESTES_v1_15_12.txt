@@ -1,0 +1,43 @@
+BATALHA NAS SOMBRAS — TESTES v1.15.12
+
+1. SINTAXE
+- Todos os arquivos .js de public/ e src/: OK (node --check).
+
+2. BARDO +1 VIDA — ARENA
+Caso sem dano:
+- antes: 1/2
+- com Inspiração: 2/3
+- após expirar: 1/2
+Resultado: OK.
+
+Caso com dano durante o bônus:
+- antes: 1/2
+- com Inspiração: 2/3
+- após sofrer 1 de dano: 1/3
+- após expirar: 1/2
+Resultado: OK; o ponto temporário é consumido pelo dano e não é removido duas vezes.
+
+3. BARDO +1 VIDA — CLÁSSICO LOCAL/TREINO
+- Sequência equivalente validada no GameReferee local.
+- Resultado: OK.
+
+4. REPLAY DA ARENA
+- Recorder capturou estado inicial + alterações relevantes: OK.
+- Teste de reconstrução usando estado inicial + ações: estado final reconstruído igual ao estado real nos campos de jogo relevantes: OK.
+- Atribuição antiga `board.className='replay-arena'`: ausente.
+- Uso de `board.setAttribute('class','replay-arena')`: presente.
+- Há feedback visível para Replay sem quadros suficientes / falha ao abrir / falha ao desenhar: OK.
+
+5. PREPARAÇÃO DA ARENA
+- `base1`, `base2`, `setupStatus`, `readyBtn`, `setupBoardBar` e `board`: 1 ocorrência de cada ID.
+- `setupBoardBar` aparece no documento antes do tabuleiro: OK.
+- Barra é escondida após a fase de preparação: OK.
+
+6. PUBLICAÇÃO / SEGURANÇA
+- src/worker.js idêntico à v1.15.11: OK.
+- wrangler.jsonc idêntico à v1.15.11: OK.
+- Regra do marcador 💥 não foi alterada: OK.
+- Replay online continua entregue somente após gameOver: preservado.
+
+OBSERVAÇÃO
+- O renderizador e a reconstrução foram validados por testes de código. O teste final de interação visual do Replay deve ser feito no navegador após abrir uma partida real, pois é justamente o fluxo que esta versão corrige.

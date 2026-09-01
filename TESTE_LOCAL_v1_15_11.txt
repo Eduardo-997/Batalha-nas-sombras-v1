@@ -1,0 +1,19 @@
+TESTE LOCAL RECOMENDADO — v1.15.11
+
+ARENA
+1. Monte uma equipe com Escudeiro e outro aliado próximos.
+2. Selecione o Escudeiro > Mover > clique DIRETAMENTE no emoji do aliado.
+   Esperado: Escudeiro entra na mesma casa; não troca a seleção para o aliado.
+3. Monte/use Bardo próximo de um aliado.
+4. Bardo > Habilidade > clique DIRETAMENTE no emoji do aliado.
+   Esperado: abre a escolha do bônus da Inspiração.
+5. Quando houver ☠️, 💥 ou outro marcador sobre uma casa, clique diretamente sobre o símbolo durante uma ação compatível.
+   Esperado: a casa recebe o clique normalmente.
+6. Observe marcações de movimento perto de Postos, árvores e aliados.
+   Esperado: somente destinos coerentes são destacados.
+7. Jogue algumas Arenas contra IA para verificar que B/C continuam agindo sem travar.
+8. Se possível, teste Arena online com IA C e confirme que ela também não fica presa repetindo uma ação inválida.
+
+DOPPELGÄNGER
+- Se conseguir montar o cenário, copie Bardo e confira que o buff expira.
+- Copie Druida, crie Galho-Vivo e confira que os dois compartilham a ativação.

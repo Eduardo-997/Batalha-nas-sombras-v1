@@ -1,0 +1,38 @@
+BATALHA NAS SOMBRAS — TESTES v1.15.11 LOCAL
+
+FOCO: BUGFIX DA ARENA
+
+1. SINTAXE
+- Todos os JS em public/ e src/: OK.
+
+2. ESCUDEIRO
+- Regra interna permite entrar na casa de 1 aliado: OK.
+- Clique no emoji durante modo Mover é tratado como clique na casa: corrigido.
+- Marcação de movimento só mostra compartilhamento quando Escudeiro permite: corrigido.
+
+3. BARDO
+- Clique no emoji de aliado durante Inspiração é tratado como alvo da habilidade: corrigido.
+- Popup de escolha de ATQ / ALC / Alc. Hab. / M / Vida continua preservado.
+
+4. MARCADORES DO TABULEIRO
+- ☠️, 💥, 🪤/🦉, 🪞, PER e 🌳 não interceptam clique: corrigido por pointer-events:none.
+- Posto encaminha clique para ação ativa antes de abrir painel: corrigido.
+
+5. DOPPELGÄNGER
+- Copiando Bardo: bônus aplicado e removido no fim do próximo turno da fonte: OK.
+- Copiando Druida: Doppel + Galho-Vivo contam como 1 unidade de ativação: OK.
+- Galho vinculado é marcado como usado junto da fonte: OK.
+
+6. IA
+- Necromante não escolhe cadáver ocupado pelo próprio aliado: OK.
+- Movimento da IA respeita compartilhamento do Escudeiro: implementado.
+- IA filtra alvos visivelmente inválidos de Espelho/armadilha/árvore: implementado.
+- Proteção anti-loop em Arena solo e IA C online: implementada.
+- Stress test: 20/20 Arenas concluídas; 0 travamentos; 0 exceções.
+
+OBSERVAÇÃO: uma IA ainda pode tentar uma casa ocupada por inimigo oculto ao usar Espelho/armadilha, pois receber essa posição antecipadamente seria trapaça. A repetição da mesma falha não trava mais a partida.
+
+7. REGRESSÃO
+- Confronto Direto Vanguarda/Executor/Estrategista/Coringa/Condenado: OK.
+- Reconstrução de Replay por estado inicial + ações: OK.
+- wrangler.jsonc: idêntico à v1.15.10.
