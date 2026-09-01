@@ -1,9 +1,9 @@
-BATALHA NAS SOMBRAS v1.15.16 — GIT + CLOUDFLARE
+BATALHA NAS SOMBRAS v1.15.17 — GIT + CLOUDFLARE
 
 1. Substitua no repositório os arquivos do jogo pelos deste pacote.
 2. Mantenha a estrutura public/, src/, package.json e wrangler.jsonc.
 3. Faça commit/push normalmente.
 4. Aguarde o deploy do Cloudflare concluir.
-5. Reabra/atualize a página do Clássico Online no PC e celular.
+5. Reabra/atualize as páginas do Clássico Online e Arena Online no PC e celular.
 
-IMPORTANTE: esta versão altera `src/worker.js` para sincronizar as regras do Clássico Online. O nome/bindings do Worker em wrangler.jsonc NÃO foram alterados.
+IMPORTANTE: esta versão altera `src/worker.js` para corrigir o fluxo pós-ação da Arena Online e reforçar o pós-ação do Clássico Online. O nome/bindings do Worker em wrangler.jsonc NÃO foram alterados.

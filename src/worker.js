@@ -1,8 +1,8 @@
-import {TriReferee,TriAI,applyTriAction} from './tri-core.js';
+import {TriReferee,TriAI,applyTriAction,TRI_SIDES} from './tri-core.js';
 // Jogo tático v1.13.5 — Cloudflare Worker + Durable Object
 // Regras e árbitro mantidos autoritativos no servidor para o X1.
 'use strict';
-// Batalha nas Sombras v1.15.16 — núcleo Clássico Online sincronizado com o Clássico local.
+// Batalha nas Sombras v1.15.17 — robustez do Online e correção do Replay da Arena.
 'use strict';
 var __gameRoot = typeof window!=='undefined' ? window : globalThis;
 __gameRoot.GameRules = (() => {
@@ -874,6 +874,7 @@ export class GameRoom {
     });
   }
   async persist(){await this.ctx.storage.put('room',{ready:this.ready,started:this.started,gameState:this.referee.exportState()});}
+  async safePersist(){try{await this.persist();return true;}catch(e){console.error('Falha ao persistir sala Clássico Online:',e);return false;}}
   send(ws,obj){try{ws.send(JSON.stringify(obj));}catch{}}
   sockets(){return this.ctx.getWebSockets();}
   attachment(ws){try{return ws.deserializeAttachment()||{};}catch{return {};}}
@@ -913,7 +914,7 @@ export class GameRoom {
       if(!this.started)return this.send(ws,{type:'result',ok:false,status:'A partida ainda não começou.'});
       const action=msg.action||{},fn=actionMap[action.type];if(!fn)return this.send(ws,{type:'result',ok:false,status:'Ação desconhecida.'});
       let res;try{res=fn(this.referee.createClient(side),action);}catch(e){console.error(e);res={ok:false,status:'Erro interno ao resolver a ação.'};}
-      await this.persist();this.send(ws,{type:'result',...res});this.broadcastViews();return;
+      await this.safePersist();this.send(ws,{type:'result',...res});this.broadcastViews();return;
     }
     this.send(ws,{type:'error',message:'Tipo de mensagem desconhecido.'});
   }
@@ -931,9 +932,10 @@ export class TriGameRoom {
     this.ctx=ctx;this.env=env;this.referee=new TriReferee();this.ready={A:null,B:null};this.started=false;this.ai=null;this.difficulty='normal';this.replayInitialState=null;this.replayActions=[];
     ctx.blockConcurrencyWhile(async()=>{const saved=await ctx.storage.get('triRoom');if(saved){this.ready=saved.ready||{A:null,B:null};this.started=!!saved.started;this.difficulty=saved.difficulty||'normal';this.replayInitialState=saved.replayInitialState||null;this.replayActions=Array.isArray(saved.replayActions)?saved.replayActions:[];if(saved.gameState)this.referee.importState(saved.gameState);if(this.started)this.ai=new TriAI('C',this.difficulty);}});
   }
-  resetReplay(){this.replayInitialState=this.referee.exportState();this.replayActions=[];}
-  recordReplayAction(side,action){if(!TRI_SIDES.includes(side)||!action)return;this.replayActions.push({side,action:structuredClone(action)});}
+  resetReplay(){try{this.replayInitialState=this.referee.exportState();this.replayActions=[];}catch(e){console.error('Falha ao iniciar Replay da Arena:',e);this.replayInitialState=null;this.replayActions=[];}}
+  recordReplayAction(side,action){try{if(!TRI_SIDES.includes(side)||!action)return false;const copy=typeof structuredClone==='function'?structuredClone(action):JSON.parse(JSON.stringify(action));this.replayActions.push({side,action:copy});return true;}catch(e){console.error('Falha ao registrar ação no Replay da Arena:',e);return false;}}
   async persist(){await this.ctx.storage.put('triRoom',{ready:this.ready,started:this.started,difficulty:this.difficulty,gameState:this.referee.exportState(),replayInitialState:this.replayInitialState,replayActions:this.replayActions});}
+  async safePersist(){try{await this.persist();return true;}catch(e){console.error('Falha ao persistir sala Arena Online:',e);return false;}}
   send(ws,obj){try{ws.send(JSON.stringify(obj));}catch{}}
   sockets(){return this.ctx.getWebSockets();}
   attachment(ws){try{return ws.deserializeAttachment()||{};}catch{return {};}}
@@ -941,7 +943,7 @@ export class TriGameRoom {
   roomState(){return{type:'roomState',started:this.started,connected:{A:!!this.sideSocket('A'),B:!!this.sideSocket('B')},ready:{A:!!this.ready.A,B:!!this.ready.B},ai:'C'};}
   broadcast(obj){for(const ws of this.sockets())this.send(ws,obj);}
   broadcastRoomState(){this.broadcast(this.roomState());}
-  broadcastViews(){if(!this.started)return;for(const side of ['A','B']){const ws=this.sideSocket(side);if(!ws)continue;const view=this.referee.client(side).getView();this.send(ws,{type:'view',view});if(view.gameOver&&this.replayInitialState)this.send(ws,{type:'arenaReplay',initialState:this.replayInitialState,actions:this.replayActions});}}
+  broadcastViews(){if(!this.started)return;for(const side of ['A','B']){const ws=this.sideSocket(side);if(!ws)continue;let view;try{view=this.referee.client(side).getView();this.send(ws,{type:'view',view});}catch(e){console.error('Falha ao gerar visão da Arena para '+side+':',e);continue;}if(view.gameOver&&this.replayInitialState){try{this.send(ws,{type:'arenaReplay',initialState:this.replayInitialState,actions:this.replayActions});}catch(e){console.error('Falha ao enviar Replay da Arena:',e);}}}}
   async runAI(){if(!this.started||!this.ai)return;let guard=0,lastFail='',failCount=0;while(guard++<100){const v=this.referee.client('C').getView();if(v.gameOver)break;if(!(v.pendingCombat||v.doppelChoice||v.turn==='C'))break;const act=this.ai.decide(v);if(!act||act.type==='wait')break;const sig=JSON.stringify(act),res=applyTriAction(this.referee.client('C'),act);if(res?.ok){this.recordReplayAction('C',act);lastFail='';failCount=0;}else{if(sig===lastFail)failCount++;else{lastFail=sig;failCount=1;}if(failCount>=2){const fallback={type:'end'},fr=applyTriAction(this.referee.client('C'),fallback);if(fr?.ok){this.recordReplayAction('C',fallback);lastFail='';failCount=0;}else break;}}this.broadcastViews();await new Promise(r=>setTimeout(r,res?.ok?120:20));}}
   async fetch(request){if(request.headers.get('Upgrade')!=='websocket')return new Response('WebSocket required',{status:426});const pair=new WebSocketPair();const client=pair[0],server=pair[1];this.ctx.acceptWebSocket(server);server.serializeAttachment({side:null});return new Response(null,{status:101,webSocket:client});}
   async webSocketMessage(ws,message){
@@ -958,15 +960,15 @@ export class TriGameRoom {
       if(this.started)return this.send(ws,{type:'result',ok:false,status:'A partida já começou.'});const res=this.referee.validateSetup(side,msg.setup,msg.bases);if(!res.ok)return this.send(ws,{type:'result',ok:false,status:res.status});
       this.ready[side]={setup:msg.setup,bases:msg.bases,difficulty:msg.difficulty||'normal'};this.send(ws,{type:'result',ok:true,status:'Pronto. Aguardando o outro jogador.'});
       if(this.ready.A&&this.ready.B){this.difficulty=['easy','normal','hard'].includes(this.ready.A.difficulty)?this.ready.A.difficulty:'normal';const st=this.referee.startOnline(this.ready.A.setup,this.ready.A.bases,this.ready.B.setup,this.ready.B.bases,this.difficulty);if(!st.ok)return this.broadcast({type:'result',ok:false,status:st.status});this.started=true;this.ai=new TriAI('C',this.difficulty);this.resetReplay();}
-      await this.persist();this.broadcastRoomState();this.broadcastViews();return;
+      await this.safePersist();this.broadcastRoomState();this.broadcastViews();return;
     }
     if(msg.type==='action'){
       if(!this.started)return this.send(ws,{type:'result',ok:false,status:'A partida ainda não começou.'});const action=msg.action||{};let res;try{res=applyTriAction(this.referee.client(side),action);}catch(e){console.error(e);res={ok:false,status:'Erro interno.'};}
-      if(res?.ok)this.recordReplayAction(side,action);this.send(ws,{type:'result',...res});this.broadcastViews();await this.runAI();await this.persist();this.broadcastViews();return;
+      if(res?.ok)this.recordReplayAction(side,action);this.send(ws,{type:'result',...res});this.broadcastViews();await this.runAI();await this.safePersist();this.broadcastViews();return;
     }
     this.send(ws,{type:'error',message:'Tipo desconhecido.'});
   }
-  async webSocketClose(ws){const side=this.attachment(ws).side;if(side&&!this.started){this.ready[side]=null;await this.persist();}this.broadcastRoomState();}
+  async webSocketClose(ws){const side=this.attachment(ws).side;if(side&&!this.started){this.ready[side]=null;await this.safePersist();}this.broadcastRoomState();}
   async webSocketError(ws){this.broadcastRoomState();}
 }
 
