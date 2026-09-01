@@ -2,7 +2,7 @@ import {TriReferee,TriAI,applyTriAction,TRI_SIDES} from './tri-core.js';
 // Jogo tático v1.13.5 — Cloudflare Worker + Durable Object
 // Regras e árbitro mantidos autoritativos no servidor para o X1.
 'use strict';
-// Batalha nas Sombras v1.15.19 — Cerco Final, regras e ajustes de apresentação.
+// Batalha nas Sombras v1.15.21 — dificuldade da IA C sincronizada pela sala.
 'use strict';
 var __gameRoot = typeof window!=='undefined' ? window : globalThis;
 __gameRoot.GameRules = (() => {
@@ -238,7 +238,7 @@ __refRoot.GameReferee = class GameReferee {
       return {id:'p'+this.#s.idSeq++,owner:'player',name:d.name,identity:d.name,hp:d.v,coord:x.coord,alive:true,activated:false,original:true,form:null,copied:null,mirrorCooldown:0,effects:[],bonusM:0,bonusV:0,bonusA:0,bonusRange:0,bonusAH:0,bonusRadarAdvanced:false,bonusRadarExpanded:false};
     });
     this.#s.bases=playerBases.map((coord,i)=>({id:'bp'+(i+1),owner:'player',coord,sabotaged:false}));
-    this.#s.aiDifficulty=['easy','normal','hard'].includes(difficulty)?difficulty:'normal';
+    this.#s.aiDifficulty=['easy','normal','hard','extreme'].includes(difficulty)?difficulty:'normal';
     this.#enemySetup(this.#s.aiDifficulty);
     this.#s.phase='play'; this.#s.mode='solo'; this.#s.round=1; this.#s.turn='player'; this.#s.gameOver=false; this.#s.result=null;
     this.#addHistory('player','🎲 Partida iniciada. 4 peças e 2 Postos por lado; 3 eliminações vencem.');
@@ -305,7 +305,7 @@ __refRoot.GameReferee = class GameReferee {
       chosen=[pick(byType('R')),pick(byType('P')),pick(byType('S'))];
       const remaining=this.#R.defs.filter(d=>!chosen.some(x=>x.name===d.name));
       const joker=remaining.find(d=>d.type==='J');
-      const jokerChance=difficulty==='hard'?0.38:0.30;
+      const jokerChance=difficulty==='extreme'?0.50:difficulty==='hard'?0.38:0.30;
       chosen.push(joker&&Math.random()<jokerChance?joker:pick(remaining));
     }
     const used=new Set([...this.#s.bases.filter(b=>b.owner==='player').map(b=>b.coord),...this.#R.blockedCells]);
@@ -322,7 +322,7 @@ __refRoot.GameReferee = class GameReferee {
     };
     let candidates;
     if(difficulty==='easy') candidates=validBaseCells([4,5,6,7]);
-    else if(difficulty==='hard'){
+    else if(difficulty==='hard'||difficulty==='extreme'){
       candidates=validBaseCells([7]);
       if(candidates.length<2)candidates.push(...validBaseCells([6]).filter(c=>!candidates.includes(c)));
     }else{
@@ -335,7 +335,7 @@ __refRoot.GameReferee = class GameReferee {
       const pool=candidates.filter(c=>!used.has(c)&&!chosenBases.includes(c));
       if(!pool.length){candidates=validBaseCells([4,5,6,7]);continue;}
       let c;
-      if(difficulty==='hard'&&chosenBases.length){
+      if((difficulty==='hard'||difficulty==='extreme')&&chosenBases.length){
         c=[...pool].sort((a,b)=>this.#R.man(b,chosenBases[0])-this.#R.man(a,chosenBases[0]))[0];
       }else c=pick(pool);
       chosenBases.push(c);used.add(c);
@@ -933,7 +933,7 @@ export class GameRoom {
 export class TriGameRoom {
   constructor(ctx,env){
     this.ctx=ctx;this.env=env;this.referee=new TriReferee();this.ready={A:null,B:null};this.started=false;this.ai=null;this.difficulty='normal';this.replayInitialState=null;this.replayActions=[];
-    ctx.blockConcurrencyWhile(async()=>{const saved=await ctx.storage.get('triRoom');if(saved){this.ready=saved.ready||{A:null,B:null};this.started=!!saved.started;this.difficulty=saved.difficulty||'normal';this.replayInitialState=saved.replayInitialState||null;this.replayActions=Array.isArray(saved.replayActions)?saved.replayActions:[];if(saved.gameState)this.referee.importState(saved.gameState);if(this.started)this.ai=new TriAI('C',this.difficulty);}});
+    ctx.blockConcurrencyWhile(async()=>{const saved=await ctx.storage.get('triRoom');if(saved){this.ready=saved.ready||{A:null,B:null};this.started=!!saved.started;this.difficulty=['easy','normal','hard','extreme'].includes(saved.difficulty)?saved.difficulty:'normal';this.replayInitialState=saved.replayInitialState||null;this.replayActions=Array.isArray(saved.replayActions)?saved.replayActions:[];if(saved.gameState)this.referee.importState(saved.gameState);if(this.started)this.ai=new TriAI('C',this.difficulty);}});
   }
   resetReplay(){try{this.replayInitialState=this.referee.exportState();this.replayActions=[];}catch(e){console.error('Falha ao iniciar Replay da Arena:',e);this.replayInitialState=null;this.replayActions=[];}}
   recordReplayAction(side,action){try{if(!TRI_SIDES.includes(side)||!action)return false;const copy=typeof structuredClone==='function'?structuredClone(action):JSON.parse(JSON.stringify(action));this.replayActions.push({side,action:copy});return true;}catch(e){console.error('Falha ao registrar ação no Replay da Arena:',e);return false;}}
@@ -943,7 +943,7 @@ export class TriGameRoom {
   sockets(){return this.ctx.getWebSockets();}
   attachment(ws){try{return ws.deserializeAttachment()||{};}catch{return {};}}
   sideSocket(side){return this.sockets().find(ws=>this.attachment(ws).side===side)||null;}
-  roomState(){return{type:'roomState',started:this.started,connected:{A:!!this.sideSocket('A'),B:!!this.sideSocket('B')},ready:{A:!!this.ready.A,B:!!this.ready.B},ai:'C'};}
+  roomState(){return{type:'roomState',started:this.started,connected:{A:!!this.sideSocket('A'),B:!!this.sideSocket('B')},ready:{A:!!this.ready.A,B:!!this.ready.B},ai:'C',difficulty:this.difficulty};}
   broadcast(obj){for(const ws of this.sockets())this.send(ws,obj);}
   broadcastRoomState(){this.broadcast(this.roomState());}
   broadcastViews(){if(!this.started)return;for(const side of ['A','B']){const ws=this.sideSocket(side);if(!ws)continue;let view;try{view=this.referee.client(side).getView();this.send(ws,{type:'view',view});}catch(e){console.error('Falha ao gerar visão da Arena para '+side+':',e);continue;}if(view.gameOver&&this.replayInitialState){try{this.send(ws,{type:'arenaReplay',initialState:this.replayInitialState,actions:this.replayActions});}catch(e){console.error('Falha ao enviar Replay da Arena:',e);}}}}
@@ -959,10 +959,16 @@ export class TriGameRoom {
     }
     if(!side)return this.send(ws,{type:'error',message:'Entre na sala primeiro.'});
     if(msg.type==='ping')return this.send(ws,{type:'pong'});
+    if(msg.type==='setDifficulty'){
+      if(this.started)return this.send(ws,{type:'result',ok:false,status:'A dificuldade da IA C já está travada para esta partida.'});
+      if(side!=='A')return this.send(ws,{type:'result',ok:false,status:'A dificuldade da IA C é definida pelo Jogador A.'});
+      this.difficulty=['easy','normal','hard','extreme'].includes(msg.difficulty)?msg.difficulty:'normal';
+      await this.safePersist();this.broadcastRoomState();this.send(ws,{type:'result',ok:true,status:`IA C definida como ${this.difficulty==='easy'?'Fácil':this.difficulty==='hard'?'Difícil':this.difficulty==='extreme'?'Extrema':'Normal'}.`});return;
+    }
     if(msg.type==='ready'){
       if(this.started)return this.send(ws,{type:'result',ok:false,status:'A partida já começou.'});const res=this.referee.validateSetup(side,msg.setup,msg.bases);if(!res.ok)return this.send(ws,{type:'result',ok:false,status:res.status});
-      this.ready[side]={setup:msg.setup,bases:msg.bases,difficulty:msg.difficulty||'normal'};this.send(ws,{type:'result',ok:true,status:'Pronto. Aguardando o outro jogador.'});
-      if(this.ready.A&&this.ready.B){this.difficulty=['easy','normal','hard'].includes(this.ready.A.difficulty)?this.ready.A.difficulty:'normal';const st=this.referee.startOnline(this.ready.A.setup,this.ready.A.bases,this.ready.B.setup,this.ready.B.bases,this.difficulty);if(!st.ok)return this.broadcast({type:'result',ok:false,status:st.status});this.started=true;this.ai=new TriAI('C',this.difficulty);this.resetReplay();}
+      this.ready[side]={setup:msg.setup,bases:msg.bases};this.send(ws,{type:'result',ok:true,status:'Pronto. Aguardando o outro jogador.'});
+      if(this.ready.A&&this.ready.B){const st=this.referee.startOnline(this.ready.A.setup,this.ready.A.bases,this.ready.B.setup,this.ready.B.bases,this.difficulty);if(!st.ok)return this.broadcast({type:'result',ok:false,status:st.status});this.started=true;this.ai=new TriAI('C',this.difficulty);this.resetReplay();}
       await this.safePersist();this.broadcastRoomState();this.broadcastViews();return;
     }
     if(msg.type==='action'){

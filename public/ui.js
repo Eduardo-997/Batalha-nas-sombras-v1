@@ -485,7 +485,7 @@
     if(selected.length!==4||setupPos.size!==4||setupBasePos.size!==2){setStatus('Escolha e posicione exatamente 4 personagens e 2 Postos.');return;}
     const setup=selected.map(name=>({name,coord:[...setupPos].find(([,n])=>n===name)?.[0]}));const bases=[setupBasePos.get(1),setupBasePos.get(2)];
     setStatus('Você: pronto · IA: pronta. Iniciando partida...');
-    aiDifficulty=aiDifficultyEl?.value||'normal';const r=referee.startGame(setup,bases,aiDifficulty);if(replay){replay.clear();replay.capture('Início da partida');}rosterCollapsed=true;setStatus(`${r.status} Dificuldade: ${aiDifficulty==='easy'?'Fácil':aiDifficulty==='hard'?'Difícil':'Normal'}.`);render();
+    aiDifficulty=aiDifficultyEl?.value||'normal';const r=referee.startGame(setup,bases,aiDifficulty);if(replay){replay.clear();replay.capture('Início da partida');}rosterCollapsed=true;setStatus(`${r.status} Dificuldade: ${aiDifficulty==='easy'?'Fácil':aiDifficulty==='hard'?'Difícil':aiDifficulty==='extreme'?'Extrema':'Normal'}.`);render();
   });
   keepDoppelBtn.addEventListener('click',()=>{const r=player.chooseDoppelCopy(false);setStatus(r.status);render();});
   copyDoppelBtn.addEventListener('click',()=>{const r=player.chooseDoppelCopy(true);setStatus(r.status);render();});

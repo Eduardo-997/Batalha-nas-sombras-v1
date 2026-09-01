@@ -111,7 +111,7 @@ __refRoot.GameReferee = class GameReferee {
       return {id:'p'+this.#s.idSeq++,owner:'player',name:d.name,identity:d.name,hp:d.v,coord:x.coord,alive:true,activated:false,original:true,form:null,copied:null,mirrorCooldown:0,effects:[],bonusM:0,bonusV:0,bonusA:0,bonusRange:0,bonusAH:0,bonusRadarAdvanced:false,bonusRadarExpanded:false};
     });
     this.#s.bases=playerBases.map((coord,i)=>({id:'bp'+(i+1),owner:'player',coord,sabotaged:false}));
-    this.#s.aiDifficulty=['easy','normal','hard'].includes(difficulty)?difficulty:'normal';
+    this.#s.aiDifficulty=['easy','normal','hard','extreme'].includes(difficulty)?difficulty:'normal';
     this.#enemySetup(this.#s.aiDifficulty);
     this.#s.phase='play'; this.#s.mode='solo'; this.#s.round=1; this.#s.turn='player'; this.#s.gameOver=false; this.#s.result=null;
     this.#addHistory('player','🎲 Partida iniciada. 4 peças e 2 Postos por lado; 3 eliminações vencem.');
@@ -178,7 +178,7 @@ __refRoot.GameReferee = class GameReferee {
       chosen=[pick(byType('R')),pick(byType('P')),pick(byType('S'))];
       const remaining=this.#R.defs.filter(d=>!chosen.some(x=>x.name===d.name));
       const joker=remaining.find(d=>d.type==='J');
-      const jokerChance=difficulty==='hard'?0.38:0.30;
+      const jokerChance=difficulty==='extreme'?0.50:difficulty==='hard'?0.38:0.30;
       chosen.push(joker&&Math.random()<jokerChance?joker:pick(remaining));
     }
     const used=new Set([...this.#s.bases.filter(b=>b.owner==='player').map(b=>b.coord),...this.#R.blockedCells]);
@@ -195,7 +195,7 @@ __refRoot.GameReferee = class GameReferee {
     };
     let candidates;
     if(difficulty==='easy') candidates=validBaseCells([4,5,6,7]);
-    else if(difficulty==='hard'){
+    else if(difficulty==='hard'||difficulty==='extreme'){
       candidates=validBaseCells([7]);
       if(candidates.length<2)candidates.push(...validBaseCells([6]).filter(c=>!candidates.includes(c)));
     }else{
@@ -208,7 +208,7 @@ __refRoot.GameReferee = class GameReferee {
       const pool=candidates.filter(c=>!used.has(c)&&!chosenBases.includes(c));
       if(!pool.length){candidates=validBaseCells([4,5,6,7]);continue;}
       let c;
-      if(difficulty==='hard'&&chosenBases.length){
+      if((difficulty==='hard'||difficulty==='extreme')&&chosenBases.length){
         c=[...pool].sort((a,b)=>this.#R.man(b,chosenBases[0])-this.#R.man(a,chosenBases[0]))[0];
       }else c=pick(pool);
       chosenBases.push(c);used.add(c);

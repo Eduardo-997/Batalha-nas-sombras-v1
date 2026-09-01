@@ -46,11 +46,11 @@
 .setup-inspector .ability-box{margin-top:7px;padding:7px 9px}
 @media(max-width:780px){.roster{grid-template-columns:repeat(2,minmax(0,1fr))}.setup-inspector .piece-info-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
-<link href="ui-v1157.css?v=1.15.19" rel="stylesheet"/>
+<link href="ui-v1157.css?v=1.15.20" rel="stylesheet"/>
 </head>
 <body class="mode-classic">
 <div class="wrap">
-<div class="row between app-header"><div class="brand-block"><h1>Batalha nas Sombras — Clássico</h1><div class="muted small header-sub">Duelo 1x1 · contra IA</div></div><div class="row topbar-actions"><div class="audio-controls" title="Sons do jogo"><button class="sound-toggle" id="soundToggle" type="button">🔊</button><input aria-label="Volume" class="volume-control" id="volumeControl" max="100" min="0" step="1" type="range"/></div><label class="ai-difficulty">IA <select id="aiDifficulty"><option value="easy">Fácil</option><option selected="" value="normal">Normal</option><option value="hard">Difícil</option></select></label><button id="quickRulesBtn">📖 Regras</button><a class="mode-btn" href="triplayer.html">Arena</a><a class="mode-btn" href="training.html">Treino</a><a class="mode-btn" href="multiplayer.html">Clássico online</a><button class="hidden" id="replayBtn">🎞️ Replay</button><button id="reset">Reiniciar</button></div></div>
+<div class="row between app-header"><div class="brand-block"><h1>Batalha nas Sombras — Clássico</h1><div class="muted small header-sub">Duelo 1x1 · contra IA</div></div><div class="row topbar-actions"><div class="audio-controls" title="Sons do jogo"><button class="sound-toggle" id="soundToggle" type="button">🔊</button><input aria-label="Volume" class="volume-control" id="volumeControl" max="100" min="0" step="1" type="range"/></div><label class="ai-difficulty">IA <select id="aiDifficulty"><option value="easy">Fácil</option><option selected="" value="normal">Normal</option><option value="hard">Difícil</option><option value="extreme">Extrema</option></select></label><button id="quickRulesBtn">📖 Regras</button><a class="mode-btn" href="triplayer.html">Arena</a><a class="mode-btn" href="training.html">Treino</a><a class="mode-btn" href="multiplayer.html">Clássico online</a><button class="hidden" id="replayBtn">🎞️ Replay</button><button id="reset">Reiniciar</button></div></div>
 <div class="row stats"><div class="stat">Rodada <b id="round">—</b></div><div class="stat">Equipe <b id="count">0/4</b></div><div class="stat">Suas perdas <b id="myDeaths">0/3</b></div><div class="stat">Perdas inimigas <b id="enemyDeaths">0/3</b></div><div class="stat"><b id="phase">Posicionamento</b></div></div>
 <div class="setup-shell" id="teamSection">
 <div class="team-head"><b id="teamTitle">Seleção de personagens</b><button class="hidden" id="teamToggle">Ver equipe</button></div>
@@ -94,6 +94,6 @@ IA NÃO recebe:
 
 Fluxo: UI → Árbitro → snapshot filtrado → Web Worker IA → intenção → Árbitro resolve.</pre></div></div>
 </div>
-<script src="rules.js?v=1.15.19"></script><script src="referee.js?v=1.15.19"></script><script src="ai.js"></script><script src="audio.js?v=1.15.19"></script><script src="replay.js"></script><script src="battle-presentation.js"></script><script src="ui.js?v=1.15.19"></script><script src="quick-rules.js?v=1.15.19"></script>
+<script src="rules.js?v=1.15.20"></script><script src="referee.js?v=1.15.20"></script><script src="ai.js?v=1.15.20"></script><script src="audio.js?v=1.15.20"></script><script src="replay.js"></script><script src="battle-presentation.js"></script><script src="ui.js?v=1.15.20"></script><script src="quick-rules.js?v=1.15.20"></script>
 <script src="ui-accessibility.js"></script>
 </body></html>
