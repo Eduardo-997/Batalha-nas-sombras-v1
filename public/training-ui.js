@@ -165,7 +165,8 @@
     }
     for(const x of state.corpses||[])cells.get(x.coord)?.insertAdjacentHTML('beforeend','<span class="marker corpse">☠</span>');
     for(const x of state.mirrors||[])cells.get(x.coord)?.insertAdjacentHTML('beforeend','<span class="marker mirror">🪞</span>');
-    for(const s of ['player','enemy'])for(const x of state.traps?.[s]||[])cells.get(x.coord)?.insertAdjacentHTML('beforeend','<span class="marker eye">🪤</span>');
+    for(const s of ['player','enemy'])for(const x of state.traps?.[s]||[])cells.get(x.coord)?.insertAdjacentHTML('beforeend',`<span class="marker eye">${x.kind==='spot'?'🦉':'🕳️'}</span>`);
+    for(const c of new Set([...(vs.player.combatCells||[]),...(vs.enemy.combatCells||[])]))cells.get(c)?.insertAdjacentHTML('beforeend','<span class="marker combat-mark">⚔️</span>');
   }
 
   function chooseStack(ps){
@@ -218,7 +219,7 @@
   function showBard(target){showPopup(`<b>🎵 Inspirar ${target.displayName}</b><div class="row" style="margin-top:8px"><button data-stat="attack">+1 ATQ</button><button data-stat="range">+1 ALC</button><button data-stat="abilityRange">+1 Alc. Hab.</button><button data-stat="move">+1 M</button><button data-stat="life">+1 Vida</button></div>`);popup.querySelectorAll('[data-stat]').forEach(b=>b.onclick=()=>after(client(activeSide).bardBuff(target.id,b.dataset.stat)));}
 
   document.querySelectorAll('[data-filter-side]').forEach(box=>{const side=box.dataset.filterSide;box.querySelectorAll('[data-filter]').forEach(btn=>btn.addEventListener('click',()=>{rosterFilter[side]=btn.dataset.filter;box.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('active',x===btn));renderRosterSide(side);}));});
-  $('#start').onclick=start;$('#reset').onclick=()=>location.reload();
+  $('#start').onclick=start;$('#reset').onclick=()=>{ref.reset();started=false;activeSide=null;setupPick=null;inspected=null;seer=[];pyro=[];recorder.clear();$('#setup').classList.remove('hidden');$('#actionControls').classList.add('hidden');replayBtn.classList.add('hidden');setStatus('Formação anterior restaurada. Ajuste se quiser e inicie o Treino novamente.');renderSetup();};
   $('#move').onclick=()=>activeSide?after(client(activeSide).startMove()):setStatus('Selecione uma peça.');
   $('#stop').onclick=()=>activeSide?after(client(activeSide).stopMove()):setStatus('Nenhum movimento em andamento.');
   $('#attack').onclick=()=>activeSide?after(client(activeSide).startAttack()):setStatus('Selecione uma peça.');

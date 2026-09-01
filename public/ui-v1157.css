@@ -288,3 +288,6 @@ button:not(:disabled):active,a.mode-btn:active,a.toplink:active,.btn:active{tran
 .mode-arena .arena-rules-overlay .qr-card p{margin:6px 0 0;color:#ddd}
 .mode-arena .arena-rules-overlay .qr-example{margin-top:8px;padding:8px 9px;border-left:3px solid #9f7c46;background:#181612;color:#e7d6b6;border-radius:4px}
 @media(max-width:680px){.mode-arena .arena-rules-overlay .qr-page.active{grid-template-columns:1fr}.mode-arena .arena-rules-overlay .qr-modal{padding:14px}.mode-arena .arena-rules-overlay .qr-tab{min-width:auto;flex:1}.mode-arena .arena-rules-overlay .qr-head{align-items:center}}
+
+/* v1.15.15 — marcador público de Confronto */
+.combat-mark{left:-5px;top:-7px;font-size:16px;z-index:7;pointer-events:none;filter:drop-shadow(0 1px 2px #000)}
