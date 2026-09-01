@@ -35,7 +35,7 @@
 <div class="modepick"><div class="modecard active" id="soloMode"><b>1 jogador + 2 IA</b><div class="small muted">Você controla A. B e C são IA.</div></div><div class="modecard" id="onlineMode"><b>2 jogadores + 1 IA</b><div class="small muted">A e B são humanos online; C é IA.</div></div></div>
 <div class="row setup-meta" style="margin-top:9px"><label>IA <select id="difficulty"><option value="easy">Fácil</option><option selected="" value="normal">Normal</option><option value="hard">Difícil</option></select></label><span class="small muted" id="sideLabel">Você é o Jogador A.</span></div>
 <div class="onlinebox hidden" id="onlineControls"><div class="row"><input class="roomcode" id="roomCode" maxlength="16" placeholder="SALA123"/><button class="primary" id="connectBtn">Entrar na sala</button><span class="small muted" id="connectionStatus">Desconectado</span></div></div>
-<div class="roster-filters"><button class="active" data-filter="all">Todos</button><button data-filter="R">🪨 Pedra</button><button data-filter="P">📜 Papel</button><button data-filter="S">✂️ Tesoura</button><button data-filter="J">🃏 Especial</button></div>
+<div class="roster-filters"><button class="active" data-filter="all">Todos</button><button data-filter="R">🛡️ Vanguarda</button><button data-filter="P">📜 Estrategista</button><button data-filter="S">🗡️ Executor</button><button data-filter="J">🃏 Coringa</button></div>
 <div class="roster" id="roster"></div>
 <div class="setup-inspector hidden" id="setupInspector"><div class="setup-inspector-head"><b id="setupInspectorTitle">Ficha rápida</b><span class="small muted">clique em outro personagem para comparar</span></div><div id="setupInspectorBody"></div></div>
 <div class="row setup-finish" style="margin-top:9px"><button class="setup-object" id="base1">🏰 Posto 1</button><button class="setup-object" id="base2">🏰 Posto 2</button><span class="small muted" id="setupStatus">0/4 personagens · 0/2 Postos</span><button class="primary" id="readyBtn">Pronto</button></div>
@@ -59,7 +59,7 @@
 <div class="rules-section">Ação e combate</div>
 <div class="rulecard"><b>🎯 Ativação</b><p>Escolha uma unidade → movimento opcional → ataque OU habilidade opcional → encerrar. Apenas uma ação real compromete o turno.</p></div>
 <div class="rulecard"><b>⚔️ Confronto Direto</b><p>Entrar numa casa inimiga dispara o sistema de arquétipos. O vencedor causa 1 de dano; se o derrotado sobreviver, a invasão pode ser repelida.</p></div>
-<div class="rulecard"><b>🪨 📜 ✂️ Arquétipos</b><p>Pedra vence Tesoura, Tesoura vence Papel e Papel vence Pedra. Coringa e arquétipos especiais seguem suas próprias regras.</p></div>
+<div class="rulecard"><b>🛡️ 📜 🗡️ Arquétipos</b><p>Vanguarda vence Executor, Executor vence Estrategista e Estrategista vence Vanguarda. Coringa vence os demais arquétipos; Condenado perde para todos os outros. Arquétipos iguais empatam.</p></div>
 <div class="rulecard"><b>↔️ Adjacência</b><p>Compartilhar borda é adjacência normal. Encostar só pela ponta é diagonal. Peças comuns usam conexões normais; exceções aparecem nas fichas.</p></div>
 <div class="rules-section">Informação e campo</div>
 <div class="rulecard"><b>👁️ PER</b><p>Percepção detecta presença pelas conexões do mapa. A informação continua filtrada por jogador; ninguém recebe posições ocultas ilegalmente.</p></div>

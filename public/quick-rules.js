@@ -26,7 +26,7 @@
         <section class="qr-page" data-page="combate">
           <div class="qr-card"><b>⚔️ Ataque normal</b><p>ATQ indica o dano do ataque e ALC indica até onde ele alcança. A marcação no tabuleiro mostra o alcance final, incluindo bônus ativos.</p></div>
           <div class="qr-card"><b>🤺 Confronto Direto</b><p>Entrar em uma casa ocupada por inimigo inicia Confronto Direto. Ele é separado do ataque normal e usa os arquétipos.</p></div>
-          <div class="qr-card"><b>🪨 📜 ✂️ Arquétipos</b><p>Pedra vence Tesoura, Tesoura vence Papel e Papel vence Pedra. Coringa e arquétipos especiais seguem as regras descritas nas fichas.</p></div>
+          <div class="qr-card"><b>🛡️ 📜 🗡️ Arquétipos</b><p>Vanguarda vence Executor, Executor vence Estrategista e Estrategista vence Vanguarda. Coringa vence os demais arquétipos; Condenado perde para todos os outros. Arquétipos iguais empatam.</p></div>
           <div class="qr-card"><b>❤️ Sobrevivência</b><p>O vencedor do Confronto causa 1 de dano. Se o derrotado sobreviver, a invasão pode ser repelida conforme a situação.</p></div>
         </section>
         <section class="qr-page" data-page="info">

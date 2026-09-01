@@ -2,18 +2,18 @@
 var __gameRoot = typeof window!=='undefined' ? window : globalThis;
 __gameRoot.GameRules = (() => {
   const defs = [
-    {name:'Arqueiro',icon:'🏹',type:'S',typeIcon:'✂️',v:1,m:0,a:1,range:99,per:1,ah:0},
-    {name:'Ninja',icon:'🗡️',type:'S',typeIcon:'✂️',v:1,m:2,a:1,range:2,per:1,ah:0},
-    {name:'Piromante',icon:'🔥',type:'S',typeIcon:'✂️',v:1,m:1,a:1,range:1,per:1,ah:1},
-    {name:'Kamikaze',icon:'💣',type:'S',typeIcon:'✂️',v:1,m:1,a:0,range:1,per:1,ah:1},
-    {name:'Caçador',icon:'🐾',type:'S',typeIcon:'✂️',v:1,m:1,a:1,range:1,per:1,ah:1},
-    {name:'Paranoia',icon:'🧠',type:'S',typeIcon:'✂️',v:1,m:1,a:1,range:1,per:1,ah:0},
-    {name:'Escudeiro',icon:'🛡️',type:'R',typeIcon:'🪨',v:2,m:1,a:0,range:1,per:1,ah:0},
-    {name:'Golem',icon:'🗿',type:'R',typeIcon:'🪨',v:2,m:1,a:0,range:1,per:1,ah:0},
-    {name:'Cavaleiro',icon:'🐎',type:'R',typeIcon:'🪨',v:1,m:3,a:1,range:1,per:1,ah:0},
-    {name:'Slime',icon:'🟢',type:'R',typeIcon:'🪨',v:1,m:1,a:0,range:1,per:1,ah:0},
-    {name:'Zumbi',icon:'🧟',type:'R',typeIcon:'🪨',v:2,m:1,a:1,range:1,per:1,ah:0},
-    {name:'Druida',icon:'🌿',type:'R',typeIcon:'🪨',v:1,m:1,a:0,range:1,per:1,ah:1},
+    {name:'Arqueiro',icon:'🏹',type:'S',typeIcon:'🗡️',v:1,m:0,a:1,range:99,per:1,ah:0},
+    {name:'Ninja',icon:'🗡️',type:'S',typeIcon:'🗡️',v:1,m:2,a:1,range:2,per:1,ah:0},
+    {name:'Piromante',icon:'🔥',type:'S',typeIcon:'🗡️',v:1,m:1,a:1,range:1,per:1,ah:1},
+    {name:'Kamikaze',icon:'💣',type:'S',typeIcon:'🗡️',v:1,m:1,a:0,range:1,per:1,ah:1},
+    {name:'Caçador',icon:'🐾',type:'S',typeIcon:'🗡️',v:1,m:1,a:1,range:1,per:1,ah:1},
+    {name:'Paranoia',icon:'🧠',type:'S',typeIcon:'🗡️',v:1,m:1,a:1,range:1,per:1,ah:0},
+    {name:'Escudeiro',icon:'🛡️',type:'R',typeIcon:'🛡️',v:2,m:1,a:0,range:1,per:1,ah:0},
+    {name:'Golem',icon:'🗿',type:'R',typeIcon:'🛡️',v:2,m:1,a:0,range:1,per:1,ah:0},
+    {name:'Cavaleiro',icon:'🐎',type:'R',typeIcon:'🛡️',v:1,m:3,a:1,range:1,per:1,ah:0},
+    {name:'Slime',icon:'🟢',type:'R',typeIcon:'🛡️',v:1,m:1,a:0,range:1,per:1,ah:0},
+    {name:'Zumbi',icon:'🧟',type:'R',typeIcon:'🛡️',v:2,m:1,a:1,range:1,per:1,ah:0},
+    {name:'Druida',icon:'🌿',type:'R',typeIcon:'🛡️',v:1,m:1,a:0,range:1,per:1,ah:1},
     {name:'Vidente',icon:'👁️',type:'P',typeIcon:'📜',v:1,m:1,a:0,range:1,per:1,ah:3},
     {name:'Mago do Espelho',icon:'🔮',type:'P',typeIcon:'📜',v:1,m:1,a:0,range:1,per:1,ah:2},
     {name:'Necromante',icon:'☠️',type:'P',typeIcon:'📜',v:1,m:1,a:1,range:1,per:1,ah:1},
@@ -24,10 +24,12 @@ __gameRoot.GameRules = (() => {
     {name:'Fantasma',icon:'👻',type:'J',typeIcon:'🃏',v:1,m:1,a:0,range:1,per:1,ah:0}
   ];
   const skeletonDef={name:'Esqueleto',icon:'💀',type:'C',typeIcon:'🦴',v:1,m:1,a:1,range:1,per:1,ah:0};
-  const miniDef={name:'Mini-Slime',icon:'🟢',type:'R',typeIcon:'🪨',v:1,m:1,a:0,range:1,per:1,ah:0};
-  const lavaDef={name:'Golem de Lava',icon:'🌋',type:'R',typeIcon:'🪨',v:1,m:0,a:1,range:1,per:1,ah:0};
+  const miniDef={name:'Mini-Slime',icon:'🟢',type:'R',typeIcon:'🛡️',v:1,m:1,a:0,range:1,per:1,ah:0};
+  const lavaDef={name:'Golem de Lava',icon:'🌋',type:'R',typeIcon:'🛡️',v:1,m:0,a:1,range:1,per:1,ah:0};
   const branchDef={name:'Galho-Vivo',icon:'🌲',type:'C',typeIcon:'🦴',v:1,m:1,a:1,range:1,per:1,ah:0};
   const byName = Object.fromEntries(defs.map(d=>[d.name,d]));
+  const archetypeNames=Object.freeze({R:'Vanguarda',P:'Estrategista',S:'Executor',J:'Coringa',C:'Condenado'});
+  const archetypeName=type=>archetypeNames[type]||type||'—';
   const baseBonuses=[
     {id:'radarAdvanced',icon:'📡',name:'Radar Avançado',description:'A percepção ortogonal da unidade escolhida informa a casa exata com presença.'},
     {id:'radarExpanded',icon:'📶',name:'Radar Ampliado',description:'A unidade escolhida também detecta nas diagonais dentro do alcance de PER e informa se a presença é ortogonal ou diagonal.'},
@@ -115,7 +117,7 @@ __gameRoot.GameRules = (() => {
     if(A===D)return'tie';
     return((A==='R'&&D==='S')||(A==='S'&&D==='P')||(A==='P'&&D==='R'))?'att':'def';
   }
-  return Object.freeze({defs,skeletonDef,miniDef,lavaDef,branchDef,baseBonuses,byName,rc,coord,inside,man,sameLine,blockedCells,isBlocked,neighbors,perceptionCells,defOf,attackCells,abilityCells,blastCells,directWinner});
+  return Object.freeze({defs,skeletonDef,miniDef,lavaDef,branchDef,baseBonuses,byName,archetypeNames,archetypeName,rc,coord,inside,man,sameLine,blockedCells,isBlocked,neighbors,perceptionCells,defOf,attackCells,abilityCells,blastCells,directWinner});
 })();
 
 if(typeof module!=='undefined'&&module.exports) module.exports=__gameRoot.GameRules;

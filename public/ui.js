@@ -143,7 +143,7 @@
   function showDefinitionInfo(d){
     if(!d)return;inspectedPieceId=null;
     const alc=d.range===99?'∞':d.range;
-    const html=`<div class="setup-definition"><div class="piece-info-grid"><div class="info-pill">❤️ Vida: <b>${d.v}</b></div><div class="info-pill">👣 Movimento: <b>${d.m}</b></div><div class="info-pill">⚔️ Ataque: <b>${d.a}</b></div><div class="info-pill">🎯 Alcance: <b>${alc}</b></div><div class="info-pill">👁️ Percepção: <b>PER ${d.per}</b></div><div class="info-pill">✨ Alc. Hab.: <b>${d.ah||0}</b></div><div class="info-pill">Arquétipo: <b>${d.typeIcon} ${d.type}</b></div></div><div class="ability-box"><b>Habilidade / característica</b><br>${ABILITY_TEXT[d.name]||'Sem descrição adicional.'}</div></div>`;
+    const html=`<div class="setup-definition"><div class="piece-info-grid"><div class="info-pill">❤️ Vida: <b>${d.v}</b></div><div class="info-pill">👣 Movimento: <b>${d.m}</b></div><div class="info-pill">⚔️ Ataque: <b>${d.a}</b></div><div class="info-pill">🎯 Alcance: <b>${alc}</b></div><div class="info-pill">👁️ Percepção: <b>PER ${d.per}</b></div><div class="info-pill">✨ Alc. Hab.: <b>${d.ah||0}</b></div><div class="info-pill">Arquétipo: <b>${d.typeIcon} ${R.archetypeName(d.type)}</b></div></div><div class="ability-box"><b>Habilidade / característica</b><br>${ABILITY_TEXT[d.name]||'Sem descrição adicional.'}</div></div>`;
     if(setupInspector){setupInspectorTitle.textContent=`${d.icon} ${d.name}`;setupInspectorBody.innerHTML=html;setupInspector.classList.remove('hidden');}
   }
   function showPieceInfo(v,p,enemy=false){
@@ -163,7 +163,7 @@
         <div class="info-pill">Ataque: <b>${p.a}</b></div>
         <div class="info-pill">Alcance: <b>${p.range}</b></div>
         <div class="info-pill">Percepção: <b>PER ${p.per}</b></div><div class="info-pill">Alc. Hab.: <b>${p.ah||0}</b></div>
-        <div class="info-pill">Arquétipo: <b>${p.typeIcon||''} ${p.type}</b></div>
+        <div class="info-pill">Arquétipo: <b>${p.typeIcon||''} ${R.archetypeName(p.type)}</b></div>
         <div class="info-pill">${kind}</div>
         ${copied}${cd}${lineage}
       </div>

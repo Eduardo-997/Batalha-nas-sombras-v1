@@ -1,0 +1,31 @@
+BATALHA NAS SOMBRAS — TESTES v1.15.10
+
+1. SINTAXE
+- Todos os arquivos JS de public/ e src/: OK.
+
+2. CONFRONTO DIRETO — CLÁSSICO
+- Vanguarda > Executor: OK.
+- Executor > Estrategista: OK.
+- Estrategista > Vanguarda: OK.
+- Coringa > Vanguarda: OK.
+- Condenado < Vanguarda: OK.
+- Condenado x Condenado = empate: OK.
+
+3. CONFRONTO DIRETO — ARENA
+- Mesma matriz acima: OK.
+
+4. NOMENCLATURA VISÍVEL
+- Filtros Clássico: OK.
+- Filtros Clássico Online: OK.
+- Filtros Arena: OK.
+- Filtros Treino A/B: OK.
+- Fichas Clássico/Online/Treino: nomes em vez de R/P/S/J/C: OK.
+- Ficha/inspector Arena: nomes novos: OK.
+- Regras Clássico/Online: nomes novos e Condenado explicado: OK.
+- Regras Arena: nomes novos e Condenado explicado: OK.
+- Busca por Pedra/Papel/Tesoura e 🪨/✂️ nos arquivos ativos: sem ocorrências.
+
+5. SERVIDOR / CLOUDFLARE
+- wrangler.jsonc: inalterado.
+- Códigos internos R/P/S/J/C preservados.
+- Nenhuma mudança na lógica de vitória/derrota do Confronto Direto.

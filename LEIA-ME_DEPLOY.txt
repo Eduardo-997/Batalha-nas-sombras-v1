@@ -1,23 +1,31 @@
-BATALHA NAS SOMBRAS — v1.15.9 — GIT + CLOUDFLARE
+BATALHA NAS SOMBRAS — v1.15.10 — GIT + CLOUDFLARE
 
 BASE
-- Continua diretamente a v1.15.8 GIT + CLOUDFLARE.
+- Continua diretamente a v1.15.9 GIT + CLOUDFLARE.
 - Pacote preparado para substituir os arquivos do repositório e publicar pelo fluxo Cloudflare já existente.
 
-MUDANÇAS DA v1.15.9
-- Nome visível definitivo alterado de “Jogo Tático Oculto” para “Batalha nas Sombras”.
-- Títulos do navegador e cabeçalhos atualizados em Clássico, Clássico Online, Arena e Treino.
-- Revisão geral de textos para português mais natural e consistente.
-- Padronização de termos como equipe, tabuleiro, ativação e Alc. Hab.
-- Removidas construções de desenvolvimento como “casa(s)”, “passo(s)” e pontuação duplicada em “Alc. Hab..”.
-- Descrições das fichas do Clássico Online sincronizadas com as mecânicas/personagens atuais.
-- Pequeno refinamento da tela de fim de partida: “Fim da Batalha”, motivos mais naturais e botões mais claros.
+MUDANÇAS DA v1.15.10
+- Arquétipos ganharam nomenclatura própria do jogo:
+  🛡️ Vanguarda / 📜 Estrategista / 🗡️ Executor / 🃏 Coringa / 🦴 Condenado.
+- Removidos da interface os nomes Pedra/Papel/Tesoura.
+- Filtros, fichas, Arena, Treino, Clássico Online e aba Regras foram atualizados.
+- Vanguarda usa 🛡️ no lugar de 🪨.
+- Executor usa 🗡️ no lugar de ✂️.
+- Regras agora explicam também Coringa e Condenado.
 
-IMPORTANTE — CLOUDFLARE
-- O nome técnico do Worker dentro de wrangler.jsonc NÃO foi alterado.
-- Isso é intencional para continuar publicando no mesmo serviço/Durable Objects já existentes.
-- O jogador vê “Batalha nas Sombras”; o identificador técnico antigo fica apenas na infraestrutura.
-- Bindings, migrations e configuração do Cloudflare não foram alterados.
+REGRA DE CONFRONTO DIRETO
+- Vanguarda vence Executor.
+- Executor vence Estrategista.
+- Estrategista vence Vanguarda.
+- Coringa vence os demais arquétipos.
+- Condenado perde para todos os outros.
+- Iguais empatam.
+
+IMPORTANTE
+- Internamente o jogo continua usando R/P/S/J/C para evitar risco desnecessário de regressão.
+- A matriz de Confronto Direto não foi alterada.
+- IA, balanceamento e demais mecânicas não foram alterados.
+- O nome técnico do Worker e wrangler.jsonc continuam inalterados.
 
 PUBLICAÇÃO
 - Substitua/atualize os arquivos do repositório com este pacote.
@@ -25,7 +33,7 @@ PUBLICAÇÃO
 - npm run deploy
 
 TESTE RECOMENDADO APÓS PUBLICAR
-1. Abrir Clássico, Arena, Treino e Clássico Online e conferir “Batalha nas Sombras” nos cabeçalhos.
-2. Abrir fichas de personagens, especialmente Caçador, Paranoia, Zumbi, Druida, Sentinela, Bardo e Fantasma no Online.
-3. Finalizar uma partida e conferir a tela “Fim da Batalha”.
-4. Conferir Replay do Clássico e da Arena após o fim da partida.
+1. Abrir Clássico, Online, Arena e Treino e conferir os filtros de arquétipo.
+2. Abrir fichas de personagens de cada arquétipo.
+3. Abrir Regras e conferir o novo ciclo de Confronto Direto.
+4. Fazer ao menos um Confronto Direto para confirmar o comportamento normal.

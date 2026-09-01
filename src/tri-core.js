@@ -2,18 +2,18 @@ import {TRI_MAP} from './tri-map.js';
 
 export const TRI_SIDES=['A','B','C'];
 export const TRI_DEFS=[
-  {name:'Arqueiro',icon:'🏹',type:'S',typeIcon:'✂️',v:1,m:0,a:1,range:99,per:1,ah:0},
-  {name:'Ninja',icon:'🗡️',type:'S',typeIcon:'✂️',v:1,m:2,a:1,range:2,per:1,ah:0},
-  {name:'Piromante',icon:'🔥',type:'S',typeIcon:'✂️',v:1,m:1,a:1,range:1,per:1,ah:1},
-  {name:'Kamikaze',icon:'💣',type:'S',typeIcon:'✂️',v:1,m:1,a:0,range:1,per:1,ah:1},
-  {name:'Caçador',icon:'🐾',type:'S',typeIcon:'✂️',v:1,m:1,a:1,range:1,per:1,ah:1},
-  {name:'Paranoia',icon:'🧠',type:'S',typeIcon:'✂️',v:1,m:1,a:1,range:1,per:1,ah:0},
-  {name:'Escudeiro',icon:'🛡️',type:'R',typeIcon:'🪨',v:2,m:1,a:0,range:1,per:1,ah:0},
-  {name:'Golem',icon:'🗿',type:'R',typeIcon:'🪨',v:2,m:1,a:0,range:1,per:1,ah:0},
-  {name:'Cavaleiro',icon:'🐎',type:'R',typeIcon:'🪨',v:1,m:3,a:1,range:1,per:1,ah:0},
-  {name:'Slime',icon:'🟢',type:'R',typeIcon:'🪨',v:1,m:1,a:0,range:1,per:1,ah:0},
-  {name:'Zumbi',icon:'🧟',type:'R',typeIcon:'🪨',v:2,m:1,a:1,range:1,per:1,ah:0},
-  {name:'Druida',icon:'🌿',type:'R',typeIcon:'🪨',v:1,m:1,a:0,range:1,per:1,ah:1},
+  {name:'Arqueiro',icon:'🏹',type:'S',typeIcon:'🗡️',v:1,m:0,a:1,range:99,per:1,ah:0},
+  {name:'Ninja',icon:'🗡️',type:'S',typeIcon:'🗡️',v:1,m:2,a:1,range:2,per:1,ah:0},
+  {name:'Piromante',icon:'🔥',type:'S',typeIcon:'🗡️',v:1,m:1,a:1,range:1,per:1,ah:1},
+  {name:'Kamikaze',icon:'💣',type:'S',typeIcon:'🗡️',v:1,m:1,a:0,range:1,per:1,ah:1},
+  {name:'Caçador',icon:'🐾',type:'S',typeIcon:'🗡️',v:1,m:1,a:1,range:1,per:1,ah:1},
+  {name:'Paranoia',icon:'🧠',type:'S',typeIcon:'🗡️',v:1,m:1,a:1,range:1,per:1,ah:0},
+  {name:'Escudeiro',icon:'🛡️',type:'R',typeIcon:'🛡️',v:2,m:1,a:0,range:1,per:1,ah:0},
+  {name:'Golem',icon:'🗿',type:'R',typeIcon:'🛡️',v:2,m:1,a:0,range:1,per:1,ah:0},
+  {name:'Cavaleiro',icon:'🐎',type:'R',typeIcon:'🛡️',v:1,m:3,a:1,range:1,per:1,ah:0},
+  {name:'Slime',icon:'🟢',type:'R',typeIcon:'🛡️',v:1,m:1,a:0,range:1,per:1,ah:0},
+  {name:'Zumbi',icon:'🧟',type:'R',typeIcon:'🛡️',v:2,m:1,a:1,range:1,per:1,ah:0},
+  {name:'Druida',icon:'🌿',type:'R',typeIcon:'🛡️',v:1,m:1,a:0,range:1,per:1,ah:1},
   {name:'Vidente',icon:'👁️',type:'P',typeIcon:'📜',v:1,m:1,a:0,range:1,per:1,ah:3},
   {name:'Mago do Espelho',icon:'🔮',type:'P',typeIcon:'📜',v:1,m:1,a:0,range:1,per:1,ah:2},
   {name:'Necromante',icon:'☠️',type:'P',typeIcon:'📜',v:1,m:1,a:1,range:1,per:1,ah:1},
@@ -25,8 +25,8 @@ export const TRI_DEFS=[
 ];
 export const TRI_BY_NAME=Object.fromEntries(TRI_DEFS.map(d=>[d.name,d]));
 export const TRI_SKELETON={name:'Esqueleto',icon:'💀',type:'C',typeIcon:'🦴',v:1,m:1,a:1,range:1,per:1,ah:0};
-export const TRI_MINI={name:'Mini-Slime',icon:'🟢',type:'R',typeIcon:'🪨',v:1,m:1,a:0,range:1,per:1,ah:0};
-export const TRI_LAVA={name:'Golem de Lava',icon:'🌋',type:'R',typeIcon:'🪨',v:1,m:0,a:1,range:1,per:1,ah:0};
+export const TRI_MINI={name:'Mini-Slime',icon:'🟢',type:'R',typeIcon:'🛡️',v:1,m:1,a:0,range:1,per:1,ah:0};
+export const TRI_LAVA={name:'Golem de Lava',icon:'🌋',type:'R',typeIcon:'🛡️',v:1,m:0,a:1,range:1,per:1,ah:0};
 export const TRI_BRANCH={name:'Galho-Vivo',icon:'🌲',type:'C',typeIcon:'🦴',v:1,m:1,a:1,range:1,per:1,ah:0};
 export const TRI_BONUSES=[
  {id:'radarAdvanced',icon:'📡',name:'Radar Avançado',description:'A percepção normal da unidade informa a casa exata com presença.'},
