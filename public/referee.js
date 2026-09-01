@@ -233,6 +233,8 @@ __refRoot.GameReferee = class GameReferee {
   #inAbilityRange(p,c,allowSelf=false){const ah=this.#R.defOf(p).ah||0,dist=this.#abilityDistance(p,c);return (allowSelf?dist>=0:dist>0)&&dist<=ah;}
   #shareTurnMate(p){if(!p)return null;if(p.name==='Druida')return this.#pieces(p.owner).find(x=>x.alive&&x.summonType==='livingBranch'&&x.druidId===p.id)||null;if(p.summonType==='livingBranch')return this.#rawPieceById(p.owner,p.druidId);return null;}
   #spottedFor(viewer,p){const x=this.#s.spotReveals?.[viewer]?.[p.id];return !!x&&p.alive;}
+  #siegeActive(){return this.#s.phase==='play'&&this.#s.bases.length>=4&&this.#s.bases.every(b=>b.sabotaged);}
+  #siegeCells(){if(!this.#siegeActive())return [];const out=[];for(let y=0;y<8;y++)for(let x=0;x<8;x++)if(x===0||x===7||y===0||y===7)out.push(this.#R.coord(x,y));return out;}
   #clearSpotOnTurnStart(p){if(!p)return;for(const side of ['player','enemy'])if(this.#s.spotReveals?.[side]?.[p.id])delete this.#s.spotReveals[side][p.id];}
   #hasBaseBonus(side,id){return this.#s.chosenBaseBonuses[side].includes(id);}
   #pieces(side){return this.#s.pieces[side];}
@@ -272,8 +274,8 @@ __refRoot.GameReferee = class GameReferee {
   }
 
   #getView(side){
-    const other=this.#other(side), act=this.#activation(side), visible=[];
-    for(const e of this.#pieces(other)) if(e.alive&&(this.#s.seer[side].has(e.coord)||this.#spottedFor(side,e))) visible.push(this.#publicPiece(e,side));
+    const other=this.#other(side), act=this.#activation(side), visible=[],siegeCells=this.#siegeCells(),siegeSet=new Set(siegeCells);
+    for(const e of this.#pieces(other)) if(e.alive&&(this.#s.seer[side].has(e.coord)||this.#spottedFor(side,e)||siegeSet.has(e.coord))) visible.push(this.#publicPiece(e,side));
     const pc=this.#s.pendingCombat;
     const pending=pc&&pc.winnerSide===side?{canChoose:true,canAdvance:!!pc.protectedAllyId||!this.#piecesAt(other,pc.deadCell).length}:null;
     return structuredClone({
@@ -287,7 +289,8 @@ __refRoot.GameReferee = class GameReferee {
       history:[...this.#s.history[side]], intel:[...this.#s.intel[side]], perceptionHints:(this.#s.perceptionHints[side]||[]).map(h=>({...h})),
       activation:act?{...act}:null, pendingCombat:pending, doppelChoice:this.#s.doppelChoice[side]?{...this.#s.doppelChoice[side]}:null,
       availablePieceIds:this.#pieces(side).filter(p=>p.alive&&(this.#s.mode==='training'||(this.#hasActivationLeft(side)&&!p.activated))).map(p=>p.id),
-      roundActivationsUsed:this.#s.mode==='training'?null:(this.#s.roundActivations?.[side]||0), roundActivationLimit:this.#s.mode==='training'?null:this.#activationLimit(side), mode:this.#s.mode
+      roundActivationsUsed:this.#s.mode==='training'?null:(this.#s.roundActivations?.[side]||0), roundActivationLimit:this.#s.mode==='training'?null:this.#activationLimit(side), mode:this.#s.mode,
+      siegeActive:siegeCells.length>0,siegeCells
     });
   }
 
@@ -574,7 +577,7 @@ __refRoot.GameReferee = class GameReferee {
     const bad=this.#validateTurn(side);if(bad)return bad;const a=this.#activation(side),p=this.#activePiece(side);if(!a||!p)return this.#fail('Selecione uma peça para sabotar o Posto.');if(a.mode)return this.#fail('Cancele ou termine a ação atual antes de sabotar.');const base=this.#baseById(baseId);if(!base||base.owner===side)return this.#fail('Escolha um Posto inimigo.');if(base.sabotaged)return this.#fail('Esse Posto já foi sabotado.');if(!this.#R.neighbors(base.coord,true).includes(p.coord))return this.#fail('Para sabotar, a peça precisa estar em uma das 8 casas ao redor do Posto.');const bonus=this.#R.baseBonuses.find(b=>b.id===bonusId);if(!bonus)return this.#fail('Benefício inválido.');if(this.#hasBaseBonus(side,bonusId))return this.#fail('Esse benefício já foi escolhido nesta partida.');
     let target=null;if(['radarAdvanced','radarExpanded','move','life','attack','range','abilityRange'].includes(bonusId)){target=this.#pieceById(side,targetPieceId);if(!target)return this.#fail('Escolha uma unidade aliada viva para receber o benefício.');if(bonusId==='range'&&this.#R.defOf(target).a<=0)return this.#fail('Mira só pode ser aplicada a um personagem que já possua ataque normal.');if(bonusId==='abilityRange'&&this.#R.defOf(target).ah<=0)return this.#fail('Canalização só pode ser aplicada a uma habilidade que use Alc. Hab.');}
     this.#commit(side);base.sabotaged=true;this.#s.chosenBaseBonuses[side].push(bonusId);if(target){if(bonusId==='move')target.bonusM=(target.bonusM||0)+1;if(bonusId==='life'){target.bonusV=(target.bonusV||0)+1;target.hp+=1;}if(bonusId==='attack')target.bonusA=(target.bonusA||0)+1;if(bonusId==='range')target.bonusRange=(target.bonusRange||0)+1;if(bonusId==='abilityRange')target.bonusAH=(target.bonusAH||0)+1;if(bonusId==='radarAdvanced')target.bonusRadarAdvanced=true;if(bonusId==='radarExpanded')target.bonusRadarExpanded=true;}
-    const detail=target?`${bonus.icon} ${bonus.name} em ${this.#R.defOf(target).name}`:`${bonus.icon} ${bonus.name}`;this.#addHistory(side,`🏰 Posto inimigo sabotado. Benefício escolhido: ${detail}.`);this.#addHistory(this.#other(side),'🏚️ Um dos seus Postos de Operação foi sabotado.');a.mode=null;return this.#finishActivation(side);
+    const detail=target?`${bonus.icon} ${bonus.name} em ${this.#R.defOf(target).name}`:`${bonus.icon} ${bonus.name}`;this.#addHistory(side,`🏰 Posto inimigo sabotado. Benefício escolhido: ${detail}.`);this.#addHistory(this.#other(side),'🏚️ Um dos seus Postos de Operação foi sabotado.');if(this.#siegeActive()){const msg='👁️ Cerco Final: todos os Postos foram sabotados. A borda externa do tabuleiro agora revela permanentemente qualquer unidade para os dois lados.';this.#addHistory('player',msg);this.#addHistory('enemy',msg);}a.mode=null;return this.#finishActivation(side);
   }
 
   #endActivationRequest(side){

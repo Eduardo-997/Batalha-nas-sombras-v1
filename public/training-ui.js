@@ -146,10 +146,10 @@
   }
 
   function paintGame(vs=views()){
-    const pieces=allPieces(vs),v=activeView(vs),p=activePiece(vs),mode=v?.activation?.mode;
+    const pieces=allPieces(vs),v=activeView(vs),p=activePiece(vs),mode=v?.activation?.mode,siege=new Set([...(vs.player.siegeCells||[]),...(vs.enemy.siegeCells||[])]);
     const state=JSON.parse(ref.exportState(),(k,val)=>val&&val.__set?val.__set:val);
     for(const [c,b] of cells){
-      b.className='cell';b.innerHTML='';const t=treeAt(state,c);if(t)addTree(b,t.state);const base=baseAtState(state,c);if(base)addBaseVisual(b,base.owner,Number((base.id||'').slice(-1))-1,base.sabotaged);
+      b.className='cell';b.innerHTML='';if(siege.has(c))b.classList.add('revealed','siege-revealed');const t=treeAt(state,c);if(t)addTree(b,t.state);const base=baseAtState(state,c);if(base)addBaseVisual(b,base.owner,Number((base.id||'').slice(-1))-1,base.sabotaged);
       const ps=pieces.filter(x=>x.alive&&x.coord===c);
       if(ps.length){
         const first=ps[0];b.appendChild(tokenFor(first,first.owner));hpBadge(b,first.hp,first.owner==='enemy');durationBadges(b,first);b.classList.add(first.owner==='player'?'training-board-side-a':'training-board-side-b');

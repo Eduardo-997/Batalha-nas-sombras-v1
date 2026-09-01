@@ -7,3 +7,7 @@ BATALHA NAS SOMBRAS v1.15.17 — GIT + CLOUDFLARE
 5. Reabra/atualize as páginas do Clássico Online e Arena Online no PC e celular.
 
 IMPORTANTE: esta versão altera `src/worker.js` para corrigir o fluxo pós-ação da Arena Online e reforçar o pós-ação do Clássico Online. O nome/bindings do Worker em wrangler.jsonc NÃO foram alterados.
+
+
+=== v1.15.19 ===
+Pacote pronto para Git/Cloudflare. Inclui Cerco Final e ajustes visuais/sonoros.

@@ -282,14 +282,14 @@
   }
 
   function paint(v){
-    const seer=new Set(v.seerArea),visibleGroups=new Map(),ownGroups=new Map();
+    const seer=new Set(v.seerArea),siege=new Set(v.siegeCells||[]),visibleGroups=new Map(),ownGroups=new Map();
     for(const e of v.visibleOpponents){if(!visibleGroups.has(e.coord))visibleGroups.set(e.coord,[]);visibleGroups.get(e.coord).push(e);}
     for(const p of ownAlive(v)){if(!ownGroups.has(p.coord))ownGroups.set(p.coord,[]);ownGroups.get(p.coord).push(p);}
     const pyroTargets=new Set(v.activation?.pyroTargets||[]);
     for(const[c,b]of cells){
       b.innerHTML='';b.className='cell';addScenery(b,c,v);
       if(v.phase==='setup'&&Number(c.slice(1))<=4)b.classList.add('setup');
-      if(seer.has(c))b.classList.add('revealed');if(seerPreview.has(c))b.classList.add('preview');
+      if(seer.has(c))b.classList.add('revealed');if(siege.has(c))b.classList.add('revealed','siege-revealed');if(seerPreview.has(c))b.classList.add('preview');
       if(pyroTargets.has(c))b.classList.add('pyro-selected');
       const openedBase=(v.bases||[]).find(x=>x.id===openedBaseId);if(openedBase&&R.neighbors(openedBase.coord,true).includes(c))b.classList.add('sabotage-zone');
       if(v.phase==='setup'){
