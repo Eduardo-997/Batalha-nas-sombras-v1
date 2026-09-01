@@ -126,7 +126,10 @@
   function renderInspector(q){
     const el=$('#pieceInfo');if(!q){el.innerHTML='<div class="muted empty-inspector">Clique em uma peça de qualquer lado para inspecionar e controlar.</div>';return;}
     const effects=(q.effects||[]).filter(e=>e.remaining>0).map(e=>`<span class="temp-effect-tag ${e.kind||'neutral'}">${e.icon||'⏳'} ${e.name} · ${e.remaining}</span>`).join('');
-    el.innerHTML=`<div class="row between"><div><b>${q.icon} ${q.displayName}</b><div class="small muted">Lado ${sideName(q.owner)} · ${q.typeIcon} ${R.archetypeName(q.type)}</div></div><span class="training-side-mark ${sideClass(q.owner)}">Lado ${sideName(q.owner)}</span></div><div class="piece-info-grid"><div class="info-pill">❤️ Vida<br><b>${q.hp}/${q.maxHp}</b></div><div class="info-pill">👣 Movimento<br><b>${q.m}</b></div><div class="info-pill">⚔️ Ataque<br><b>${q.a}</b></div><div class="info-pill">🎯 Alcance<br><b>${q.range}</b></div><div class="info-pill">👁 PER<br><b>${q.per}</b></div><div class="info-pill">✦ Alc. Hab.<br><b>${q.ah||0}</b></div></div>${q.form?`<div class="bonus-tags"><span class="bonus-tag">Forma: ${q.form}</span></div>`:''}${q.copied?`<div class="bonus-tags"><span class="bonus-tag">Copiou: ${q.copied}</span></div>`:''}${effects?`<div class="temporary-effects">${effects}</div>`:''}`;
+    const kind=q.summonType==='skeleton'?'Invocação: Esqueleto':q.summonType==='miniSlime'?'Divisão: Mini-Slime':q.summonType==='livingBranch'?'Invocação: Galho-Vivo':q.form==='lava'?'Forma: Golem de Lava':q.possessing?'👻 Corpo possuído':q.possessedAway?'👻 Possuído — localização perdida':q.original?'Personagem original':'Unidade';
+    const bonuses=[];if(q.bonusM)bonuses.push(`👣 +${q.bonusM} M`);if(q.bonusV)bonuses.push(`❤️ +${q.bonusV} V`);if(q.bonusA)bonuses.push(`⚔️ +${q.bonusA} ATQ`);if(q.bonusRange)bonuses.push(`🎯 +${q.bonusRange} ALC`);if(q.bonusAH)bonuses.push(`✨ +${q.bonusAH} Alc. Hab.`);if(q.radarAdvanced)bonuses.push('📡 Radar Avançado');if(q.radarExpanded)bonuses.push('📶 Radar Ampliado');
+    const trapNote=q.name==='Caçador'||q.name==='Sentinela'?'<div class="small muted" style="margin-top:7px">Armadilhas podem ser preparadas sob uma peça já presente e só ativam quando um inimigo entrar nessa casa depois.</div>':'';
+    el.innerHTML=`<div class="row between"><div><b>${q.icon} ${q.displayName}</b><div class="small muted">Lado ${sideName(q.owner)} · ${q.typeIcon} ${R.archetypeName(q.type)} · ${kind}</div></div><span class="training-side-mark ${sideClass(q.owner)}">Lado ${sideName(q.owner)}</span></div><div class="piece-info-grid"><div class="info-pill">❤️ Vida<br><b>${q.hp}/${q.maxHp}</b></div><div class="info-pill">👣 Movimento<br><b>${q.m}</b></div><div class="info-pill">⚔️ Ataque<br><b>${q.a}</b></div><div class="info-pill">🎯 Alcance<br><b>${q.range}</b></div><div class="info-pill">👁 PER<br><b>${q.per}</b></div><div class="info-pill">✦ Alc. Hab.<br><b>${q.ah||0}</b></div></div>${q.form?`<div class="bonus-tags"><span class="bonus-tag">Forma: ${q.form}</span></div>`:''}${q.copied?`<div class="bonus-tags"><span class="bonus-tag">Copiou: ${q.copied}</span></div>`:''}${bonuses.length?`<div class="bonus-tags">${bonuses.map(x=>`<span class="bonus-tag">${x}</span>`).join('')}</div>`:''}${effects?`<div class="temporary-effects">${effects}</div>`:''}${trapNote}`;
   }
 
   function render(){
@@ -163,10 +166,14 @@
         if(seer.includes(c)||pyro.includes(c))b.classList.add('pyro-selected');
       }
     }
-    for(const x of state.corpses||[])cells.get(x.coord)?.insertAdjacentHTML('beforeend','<span class="marker corpse">☠</span>');
+    for(const x of state.corpses||[])cells.get(x.coord)?.insertAdjacentHTML('beforeend','<span class="marker corpse">☠️</span>');
     for(const x of state.mirrors||[])cells.get(x.coord)?.insertAdjacentHTML('beforeend','<span class="marker mirror">🪞</span>');
-    for(const s of ['player','enemy'])for(const x of state.traps?.[s]||[])cells.get(x.coord)?.insertAdjacentHTML('beforeend',`<span class="marker eye">${x.kind==='spot'?'🦉':'🕳️'}</span>`);
-    for(const c of new Set([...(vs.player.combatCells||[]),...(vs.enemy.combatCells||[])]))cells.get(c)?.insertAdjacentHTML('beforeend','<span class="marker combat-mark">⚔️</span>');
+    for(const s of ['player','enemy'])for(const x of state.traps?.[s]||[])cells.get(x.coord)?.insertAdjacentHTML('beforeend',`<span class="marker eye" title="Armadilha do Lado ${sideName(s)}">${x.kind==='spot'?'🦉':'🕳️'}</span>`);
+    for(const c of new Set([vs.player.impactCell,vs.enemy.impactCell].filter(Boolean)))cells.get(c)?.insertAdjacentHTML('beforeend','<span class="marker impact" title="Ataque ocorreu aqui">💥</span>');
+    for(const c of new Set([...(vs.player.combatCells||[]),...(vs.enemy.combatCells||[])]))cells.get(c)?.insertAdjacentHTML('beforeend','<span class="marker combat-mark" title="Confronto Direto ocorreu aqui">⚔️</span>');
+    const seerCells=new Set([...(vs.player.seerArea||[]),...(vs.enemy.seerArea||[])]);for(const c of seerCells)cells.get(c)?.insertAdjacentHTML('beforeend','<span class="marker eye" title="Casa sob efeito do Vidente">👁️</span>');
+    const hints=[...(vs.player.perceptionHints||[]).map(h=>({...h,side:'player'})),...(vs.enemy.perceptionHints||[]).map(h=>({...h,side:'enemy'}))];for(const h of hints){const mark=h.kind==='exact'?'📍':h.kind==='diag'?'◇':'❗';cells.get(h.coord)?.insertAdjacentHTML('beforeend',`<span class="presence-hint ${h.kind||'orth'}" title="PER do Lado ${sideName(h.side)}">${mark}</span>`);}
+    for(const viewer of ['player','enemy'])for(const pieceId of Object.keys(state.spotReveals?.[viewer]||{})){const target=['player','enemy'].flatMap(s=>state.pieces?.[s]||[]).find(x=>x.id===pieceId&&x.alive&&x.coord);if(target)cells.get(target.coord)?.insertAdjacentHTML('beforeend',`<span class="presence-hint exact" title="Revelado ao Lado ${sideName(viewer)} pela armadilha da Sentinela">📍</span>`);}
   }
 
   function chooseStack(ps){

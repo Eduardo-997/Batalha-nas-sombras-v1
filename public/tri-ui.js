@@ -14,7 +14,7 @@ const ABILITY_TEXT={
   'Ninja':'Especialista em mobilidade e alcance: M2 e ALC2. Não possui habilidade ativa.',
   'Piromante':'Escolhe 1 ou 2 casas dentro do Alc. Hab. e resolve os dois ataques na mesma ação.',
   'Kamikaze':'Ao morrer, causa 1 de dano em toda a área do Alc. Hab., inclusive em aliados. Aumentar o Alc. Hab. expande a explosão.',
-  'Caçador':'Mantém 1 armadilha de dano oculta dentro do Alc. Hab. Ela ativa quando um inimigo passa pela casa, causa 1 de dano e desaparece. Em Confronto Direto, o dano acontece antes do confronto.',
+  'Caçador':'Mantém 1 armadilha de dano oculta dentro do Alc. Hab. Pode prepará-la mesmo em uma casa ocupada; ela não dispara na colocação. Quando um inimigo entrar nessa casa depois, causa 1 de dano e desaparece. Em Confronto Direto, o dano acontece antes do confronto.',
   'Paranoia':'Ao detectar inimigos com PER, afeta até 2 alvos por 2 turnos deles. O efeito só é revelado depois que o alvo se move; enquanto durar, a percepção sempre acusa uma presença, verdadeira ou falsa.',
   'Escudeiro':'Pode compartilhar casa com 1 aliado, intercepta ataques e dano em área para protegê-lo e esconde a presença do aliado enquanto dividem a casa.',
   'Golem':'Ao sofrer o primeiro dano e sobreviver, vira Golem de Lava: perde 1 de Movimento e ganha 1 de Ataque. Mantém os bônus recebidos.',
@@ -26,7 +26,7 @@ const ABILITY_TEXT={
   'Mago do Espelho':'Cria 1 Espelho dentro do Alc. Hab. Com Alc. Hab. 2, alcança duas conexões normais ou uma diagonal. O Espelho gera falsa presença e reflete o primeiro ataque; criar outro substitui o anterior.',
   'Necromante':'Ergue um Esqueleto usando um cadáver dentro do Alc. Hab. Limite de 1 Esqueleto vivo por Necromante.',
   'Doppelgänger':'Ao passar por um cadáver, copia sua habilidade. Habilidades copiadas usam o Alc. Hab. do próprio Doppelgänger; ao encontrar outra, escolhe manter a atual ou trocar.',
-  'Sentinela':'Mantém até 2 armadilhas ocultas dentro do Alc. Hab. Um inimigo que passa por uma delas fica com a posição revelada até o início do próximo turno daquela peça.',
+  'Sentinela':'Mantém até 2 armadilhas ocultas dentro do Alc. Hab. Pode prepará-las mesmo em casas ocupadas; elas não disparam na colocação. Um inimigo que entrar depois em uma delas fica com a posição revelada até o início do próximo turno daquela peça.',
   'Bardo':'Escolhe 1 aliado dentro do Alc. Hab. e concede +1 ATQ, ALC, Alc. Hab., M ou Vida. Mantém apenas 1 aliado inspirado; o bônus dura até o fim do próximo turno do Bardo.',
   'Coringa':'Possui todos os arquétipos no Confronto Direto e também pode se mover pelas diagonais.',
   'Fantasma':'Ataques e Confrontos Diretos vencidos possuem o inimigo em vez de causar dano. Você passa a controlar a peça e o antigo dono perde sua localização. Se o Fantasma sofrer dano, ele morre e a peça é recuperada.'
