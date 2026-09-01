@@ -1,0 +1,42 @@
+TESTE LOCAL — v1.15.3
+
+Sugestão de teste rápido:
+
+1) ABREVIAÇÃO
+- Abra a seleção/ficha de personagens.
+- Confirme que aparece “Alc. Hab.” em vez de “AH”.
+- Confira também Bardo (+1 Alc. Hab.) e Canalização dos Postos.
+
+2) CAÇADOR
+- Confirme que o personagem usa 🐾.
+- Coloque uma armadilha do Caçador e confirme que a armadilha continua usando 🪤.
+
+3) BARDO + ALC
+- Coloque Bardo perto de um personagem com ataque normal.
+- Dê +1 ALC.
+- Selecione esse personagem e clique em Ataque.
+- A marcação deve aumentar exatamente junto com o ALC real.
+
+4) BARDO + ALC. HAB.
+- Dê +1 Alc. Hab. para Piromante, Vidente, Mago do Espelho, Necromante, Druida, Sentinela, Caçador ou Bardo.
+- Clique na ação correspondente.
+- A marcação deve aumentar exatamente junto com o Alc. Hab. real.
+
+5) POSTO + CANALIZAÇÃO
+- No Treino, sabote um Posto e dê Canalização para uma unidade com Alc. Hab.
+- A ficha deve subir +1 e a marcação deve acompanhar imediatamente.
+
+6) ÁREA COMPLETA DA HABILIDADE
+- Clique em Habilidade com Necromante, Druida, Mago do Espelho, Sentinela, Caçador e Bardo.
+- O mapa deve mostrar o Alc. Hab. completo, não apenas casas que já possuam um alvo válido.
+- Tentar usar uma casa inválida deve continuar sendo rejeitado normalmente pelo Árbitro.
+
+7) NECROMANTE/DRUIDA SEM ALVO
+- Teste Necromante sem cadáver no alcance e Druida sem árvore válida no alcance.
+- Ainda deve ser possível abrir a prévia do Alc. Hab.; a mensagem deve informar que não há alvo válido no momento.
+
+8) ARENA
+- Se possível, teste Bardo +1 ALC e +1 Alc. Hab. na Arena.
+- A marcação deve acompanhar o valor final da ficha.
+
+Nenhuma publicação GitHub/Cloudflare foi feita nesta versão.

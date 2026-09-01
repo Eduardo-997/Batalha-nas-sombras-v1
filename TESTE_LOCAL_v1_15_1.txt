@@ -1,0 +1,40 @@
+JOGO TÁTICO OCULTO — v1.15.1 · TESTE LOCAL
+BASE: v1.14.1 HOTFIX ALC
+
+NÃO FAZER DEPLOY AINDA.
+
+TREINO
+1. Abra a pasta `public`.
+2. Abra `training.html` (ou entre em Treino pelo menu do jogo).
+3. Escolha 4 personagens no Lado A e 4 no Lado B.
+4. As peças aparecem no mapa durante a montagem. Clique nelas e depois em uma casa vazia para reposicionar.
+5. Clique em `Iniciar Treino`.
+6. Clique em qualquer peça A ou B e use Mover / Atacar / Habilidade normalmente.
+7. Depois de terminar uma ação, você pode usar a mesma peça novamente ou trocar de lado.
+8. Use `Avançar rodada` apenas quando quiser testar passagem de tempo, Zumbi ou efeitos temporários.
+9. O Replay pode ser aberto durante o Treino.
+
+O QUE OBSERVAR NO TREINO
+- Se o visual agora parece realmente parte do jogo principal.
+- Escudeiro dividindo casa.
+- Vidente/Piromante e seus popups.
+- Golem -> Lava.
+- Slime/Mini-Slimes.
+- Necromante/Esqueleto.
+- Druida/árvores.
+- Caçador/armadilhas.
+- Bardo.
+- Doppelgänger.
+- Zumbi com avanço manual de rodada.
+- troca A <-> B sem limitação de rodada.
+
+REPLAY DO CLÁSSICO
+1. Abra `index.html` e jogue uma partida contra a IA.
+2. O botão Replay deve continuar escondido enquanto a partida estiver acontecendo.
+3. Depois do resultado final, o botão `Replay` aparece.
+4. Confira voltar/avançar, reproduzir e a linha do tempo.
+
+IMPORTANTE
+- Replay da Arena e do Clássico online ainda NÃO foi adicionado.
+- Esta build não altera seu deploy atual.
+- Se algo parecer errado, não publicar: voltar ao ChatGPT com o problema observado.

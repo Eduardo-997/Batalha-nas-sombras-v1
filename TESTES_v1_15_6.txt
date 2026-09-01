@@ -1,0 +1,33 @@
+JOGO TÁTICO OCULTO — TESTES v1.15.6
+
+ESCOPO
+- Lapidação geral da interface.
+- Nenhuma mudança de mecânica planejada.
+
+TESTES AUTOMÁTICOS/ESTRUTURAIS REALIZADOS
+[OK] Sintaxe de todos os JS de public/ e src/.
+[OK] Todos os JS já existentes na v1.15.5 permanecem idênticos byte a byte.
+[OK] src/worker.js permanece idêntico à v1.15.5.
+[OK] public/referee.js permanece idêntico à v1.15.5.
+[OK] núcleos da Arena permanecem idênticos à v1.15.5.
+[OK] IDs existentes das quatro páginas principais foram preservados.
+[OK] Nova folha ui-v1156.css carregada nas quatro páginas.
+[OK] ui-accessibility.js passa em node --check.
+[OK] Renderização estática de Clássico, Arena, Treino e Clássico Online usada para revisar hierarquia/layout desktop.
+
+CHECKLIST MANUAL RECOMENDADO AO USUÁRIO
+1. Clássico: selecionar 4 personagens + Postos e iniciar.
+2. Verificar barra Mover/Atacar/Habilidade/Encerrar/Cancelar.
+3. Selecionar unidades e conferir ficha lateral.
+4. Abrir Regras.
+5. Arena: montar equipe, iniciar e conferir painel lateral/tabuleiro.
+6. Treino: montar A/B, iniciar, alternar lados e avançar rodada.
+7. Online: entrar em sala e conferir preparação/partida.
+8. Redimensionar a janela para conferir responsividade.
+
+STATUS
+- LOCAL PARA TESTE.
+- NÃO PUBLICAR ainda sem aprovação do usuário.
+[OK] Referências locais de CSS/JS das quatro páginas apontam para arquivos existentes.
+[OK] Revisão visual estática em viewport desktop (1440px) para Clássico, Arena, Treino e Online.
+[OK] Revisão visual estática em viewport móvel (390px) para Clássico, Arena e Treino, sem overflow horizontal estrutural.

@@ -1,0 +1,20 @@
+TESTES — v1.15.9
+=================
+
+[OK] Sintaxe de todos os JavaScript em public/ e src/ validada com node --check.
+[OK] Clássico iniciou normalmente em teste direto do Árbitro após a revisão textual.
+[OK] Arena iniciou normalmente em teste direto do TriReferee após a revisão textual.
+[OK] Bônus Canalização continua presente e descrito como Alcance de Habilidade.
+
+[OK] “Batalha nas Sombras” aparece nos títulos/cabeçalhos de Clássico, Online, Arena e Treino.
+[OK] Não restaram ocorrências visíveis de “Jogo Tático Oculto” nas páginas ativas.
+[OK] Não restaram ocorrências de “Alc. Hab..” nas fontes ativas.
+[OK] Mensagens com “passo(s)”, “casa(s)”, “presença(s)” e “alvo(s)” foram substituídas por pluralização natural nas rotas ativas revisadas.
+
+[OK] Descrições do Clássico Online sincronizadas com o elenco/mecânicas atuais.
+[OK] Tela final continua usando o mesmo componente e callbacks de Replay; apenas textos foram refinados.
+
+[OK] wrangler.jsonc permaneceu byte por byte inalterado em relação à v1.15.8.
+[OK] Nenhuma alteração de binding, migration ou nome técnico do Worker foi feita.
+
+[INFO] Esta versão é uma revisão de identidade/texto/apresentação. Não contém mudança intencional de regra ou balanceamento.

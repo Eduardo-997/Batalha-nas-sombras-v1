@@ -1,0 +1,12 @@
+TESTES v1.15.5 — ATIVAÇÕES + REGRAS
+
+[OK] Sintaxe de todos os JS em public/ e src/.
+[OK] Clássico 4 x 2 -> limite 3 x 2.
+[OK] Reinício de rodada após 3 ativações contra 2.
+[OK] Arena 4 / 4 / 2 -> limites 3 / 3 / 2.
+[OK] Arena reinicia a rodada após todos atingirem seus limites.
+[OK] Druida + Galho-Vivo contam como uma única ativação compartilhada.
+[OK] Ativação é contabilizada mesmo se a unidade morrer durante a própria ação.
+[OK] HTML principal analisado sem erro estrutural pelo parser.
+
+ATENÇÃO: versão LOCAL para teste. Não publicar ainda.

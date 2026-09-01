@@ -1,0 +1,46 @@
+JOGO TÁTICO OCULTO — v1.15.2 · TESTE LOCAL
+BASE: v1.15.1 correta sobre v1.14.1 HOTFIX ALC
+
+NÃO FAZER DEPLOY AINDA.
+
+TREINO — PREPARAÇÃO
+1. Abra `public/training.html`.
+2. Escolha 4 personagens no Lado A e 4 no Lado B.
+3. Confira que cada lado também mostra 2 botões de Posto.
+4. Clique em um Posto e reposicione dentro do próprio lado do tabuleiro.
+5. Tente colocar Posto em árvore, canto ou casa ocupada: deve ser impedido.
+6. Inicie o Treino e confirme 4 personagens + 2 Postos de cada lado no mapa.
+
+TREINO — POSTOS / SABOTAGEM
+1. Mova uma peça para uma das 8 casas ao redor de um Posto inimigo.
+2. Clique no Posto.
+3. Confira os benefícios de sabotagem.
+4. Teste `✨ Canalização` em Vidente, Piromante, Mago do Espelho, Necromante, Druida, Sentinela, Caçador, Bardo etc.
+5. O alvo deve receber +1 AH permanente e o Posto deve virar 🏚️ sabotado.
+6. O mesmo benefício não deve poder ser escolhido novamente pelo mesmo lado, seguindo a regra normal.
+
+BARDO
+1. Coloque Bardo perto de um aliado que use AH, por exemplo Vidente.
+2. Use Habilidade → escolha o aliado.
+3. Deve existir a opção `+1 AH` junto de ATQ / ALC / M / Vida.
+4. Confira na ficha que AH subiu em +1.
+5. A Inspiração continua temporária e deve terminar seguindo a duração normal do Bardo.
+
+REPLAY DO TREINO
+1. Faça uma sabotagem.
+2. Abra Replay.
+3. Os Postos devem aparecer no tabuleiro.
+4. Um Posto sabotado deve aparecer como 🏚️ no quadro correspondente.
+
+REGRESSÃO RÁPIDA
+- usar a mesma peça várias vezes na mesma rodada do Treino;
+- trocar A ↔ B depois de concluir a ação;
+- Avançar rodada manualmente;
+- movimento não deve entrar em casa de Posto;
+- ataques normais não destroem Postos: sabotagem continua sendo a interação correta;
+- habilidades, Confronto Direto, transformações e invocações continuam funcionando.
+
+IMPORTANTE
+- Não foi feito deploy.
+- Replay online/Arena continua fora do escopo.
+- O Worker antigo do Clássico online não foi modernizado nesta build.

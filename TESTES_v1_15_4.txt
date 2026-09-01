@@ -1,0 +1,10 @@
+v1.15.4 — TESTES EXECUTADOS
+
+[OK] Sintaxe de todos os 19 JavaScript em public/ e src/.
+[OK] Galho-Vivo: Vida base = 1.
+[OK] Galho-Vivo: arquétipo = C / 🦴, igual ao Esqueleto.
+[OK] Confronto Direto: Galho-Vivo segue a regra do tipo C e perde para arquétipos adversários normais/especiais testados.
+[OK] Treino: Druida desperta Galho-Vivo com 1/1 de vida e arquétipo 🦴.
+[OK] Arena: árvores mantêm as mesmas 3 coordenadas iniciais; apenas tamanho visual 20 -> 24.
+[OK] package.json válido e versão = 1.15.4.
+[OK] wrangler.jsonc preservado estruturalmente; projeto/bindings não foram renomeados.

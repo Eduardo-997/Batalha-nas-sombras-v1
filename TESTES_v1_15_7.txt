@@ -1,0 +1,28 @@
+TESTES — v1.15.7
+=================
+
+[OK] Sintaxe de todos os arquivos JavaScript em public/ e src/ validada com node --check.
+
+[OK] Clássico: ataque inimigo gera 💥 para o adversário.
+[OK] Clássico: selecionar/começar/mover uma peça NÃO apaga o 💥.
+[OK] Clássico: encerrar a própria ativação apaga o 💥.
+
+[OK] Arena: dois adversários podem gerar dois 💥 diferentes para o mesmo jogador antes da vez dele.
+[OK] Arena: os dois marcadores sobrevivem enquanto esse jogador move/continua a própria ativação.
+[OK] Arena: todos os marcadores desse jogador são limpos apenas ao fim da ativação dele.
+[OK] Arena: quando B ataca uma peça de C, A também recebe a casa do ataque como 💥 público.
+[OK] Arena: coordenada de ataque é enviada sem revelar posição/identidade oculta do atacante.
+
+[OK] Filtro Eventos da Batalha remove mensagens rotineiras de rodada/Bardo/Vidente no teste de amostra.
+[OK] Filtro preserva dano relevante e sabotagem no teste de amostra.
+[OK] Clássico, Clássico Online e Arena possuem somente um painel de Eventos da Batalha; painel textual de Informações Táticas foi removido dessas telas.
+[OK] Treino preserva os painéis de diagnóstico A/B por ser ambiente de testes.
+
+[OK] Tela final validada em DOM headless: overlay criado, resumo renderizado e botões presentes.
+[OK] Aparência da tela final inspecionada em screenshot headless.
+
+[OK] Todos os scripts e CSS locais referenciados pelos HTMLs existem no pacote.
+[OK] wrangler.jsonc comparado com v1.15.6 e permanece inalterado.
+[OK] public/tri-core.js e src/tri-core.js permanecem sincronizados.
+
+[INFO] npm run deploy -- --dry-run não pôde ser executado neste ambiente porque node_modules/wrangler não está instalado localmente. O pacote mantém o devDependency de wrangler no package.json e o wrangler.jsonc existente; o fluxo Git/Cloudflare continua o mesmo das versões anteriores.

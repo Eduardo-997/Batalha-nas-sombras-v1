@@ -1,0 +1,33 @@
+TESTES — v1.15.8
+=================
+
+[OK] Sintaxe de todos os JavaScript em public/ e src/ validada com node --check.
+
+[OK] Replay Recorder reconhece o formato A/B/C da Arena.
+[OK] Seleção/modo sem mudança relevante não cria quadro inútil.
+[OK] Encerramento de ativação cria novo quadro por alterar turno/estado de ativação.
+[OK] Quadros da Arena preservam os três conjuntos de peças A/B/C.
+
+[OK] Reconstrução por estado inicial + sequência de ações testada em TriReferee separado.
+[OK] O estado de tabuleiro reconstruído coincidiu com o estado produzido pela sequência original no teste automatizado.
+
+[OK] Arena solo inicia Recorder apenas depois que a partida começou.
+[OK] Ações válidas do Jogador A são capturadas no Replay solo.
+[OK] Ações das IAs B/C são capturadas no Replay solo.
+[OK] Tela final da Arena só oferece Replay quando existem quadros e gameOver está ativo.
+
+[OK] Arena online persiste replayInitialState + replayActions no Durable Object.
+[OK] Apenas ações válidas são adicionadas ao log do Replay online.
+[OK] Ações da IA C também são adicionadas ao log.
+[OK] broadcastViews envia arenaReplay somente dentro da condição view.gameOver.
+[OK] Cliente só aceita/reconstrói arenaReplay quando sua View já está em gameOver.
+[OK] Antes do gameOver, as mensagens normais continuam contendo apenas a View filtrada.
+
+[OK] triplayer.html carrega replay.js antes de tri-ui-global.js.
+[OK] public/replay.js continua suportando o Replay clássico 8x8 e adiciona layout triangular da Arena.
+[OK] Renderer da Arena inclui A/B/C, Postos, árvores, cadáveres, espelhos e armadilhas a partir do estado real.
+
+[OK] wrangler.jsonc permaneceu inalterado em relação à v1.15.7.
+[OK] public/tri-core.js, public/tri-core-global.js e src/tri-core.js não precisaram de alteração de regra para esta feature.
+
+[INFO] Tentativa de screenshot headless com Chromium do Replay foi abortada porque o processo Chromium não finalizou corretamente neste ambiente. Isso não afetou os testes de sintaxe, gravação e reconstrução da lógica do Replay.
