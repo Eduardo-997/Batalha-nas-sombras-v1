@@ -1,0 +1,19 @@
+BATALHA NAS SOMBRAS — TESTES v1.15.14
+
+[OK] Sintaxe de public/tri-ui-global.js.
+[OK] Sintaxe de public/ui.js.
+[OK] Seletor de dificuldade contém Fácil / Normal / Difícil no Clássico.
+[OK] Seletor de dificuldade contém Fácil / Normal / Difícil na Arena.
+[OK] Regras da Arena possuem 4 abas: Partida / Combate / Informação / Campo.
+[OK] Regras da Arena possuem 4 páginas correspondentes.
+[OK] 16 cartões de regras presentes na Arena.
+[OK] public/tri-core-global.js idêntico à v1.15.13.
+[OK] public/referee.js idêntico à v1.15.13.
+[OK] public/ai.js idêntico à v1.15.13.
+[OK] src/worker.js idêntico à v1.15.13.
+[OK] wrangler.jsonc idêntico à v1.15.13.
+
+Teste manual recomendado:
+1. Abrir Clássico e Arena e clicar no seletor de dificuldade; confirmar leitura clara das três opções.
+2. Abrir Regras na Arena e alternar entre as quatro abas.
+3. Conferir comportamento em janela menor/celular.

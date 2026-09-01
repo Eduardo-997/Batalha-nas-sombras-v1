@@ -259,3 +259,32 @@ button:not(:disabled):active,a.mode-btn:active,a.toplink:active,.btn:active{tran
 .endgame-actions{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;padding-top:3px}
 .endgame-actions button{min-width:135px}
 @media(max-width:700px){.side-panels:has(.battle-events-panel){grid-template-columns:1fr!important}.endgame-card{padding:19px}.endgame-card h2{font-size:24px}.endgame-actions button{flex:1 1 100%}}
+
+/* v1.15.13 — Pronto próximo ao tabuleiro no Clássico */
+.setup-board-ready{margin-bottom:10px!important}
+.setup-board-ready-head{align-items:flex-start}
+.setup-board-ready-head .ready-line{margin:0!important;padding:0!important;border:0!important;white-space:nowrap}
+.setup-board-ready-actions{margin-top:10px}
+.setup-board-ready-actions .ready-near-board{margin-left:auto;min-width:112px;font-weight:800}
+@media(max-width:700px){.setup-board-ready-head{align-items:stretch}.setup-board-ready-head .ready-line{width:100%}.setup-board-ready-actions .ready-near-board{width:100%;margin-left:0}}
+
+
+/* v1.15.14 — contraste dos seletores de dificuldade e Regras da Arena alinhadas ao Clássico. */
+.ai-difficulty select,.mode-arena #difficulty{color-scheme:dark;background:#17150f!important;color:#f5ead4!important;border-color:#6a5638!important}
+.ai-difficulty select option,.mode-arena #difficulty option{background:#191713!important;color:#f5ead4!important}
+.ai-difficulty select:focus,.mode-arena #difficulty:focus{outline:2px solid rgba(195,154,85,.32);outline-offset:1px;border-color:#b28b4f!important}
+.mode-arena .arena-rules-overlay{backdrop-filter:blur(3px)}
+.mode-arena .arena-rules-overlay .qr-modal{width:min(900px,96vw);max-width:900px;max-height:88vh;overflow:auto;background:linear-gradient(155deg,#1a1b1d,#101113);border:1px solid #645137;border-radius:13px;padding:18px;color:#eee;box-shadow:0 24px 70px #000b}
+.mode-arena .arena-rules-overlay .qr-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;padding-bottom:11px;border-bottom:1px solid #3b3329}
+.mode-arena .arena-rules-overlay .qr-head h2{margin:0;color:#f1d8a5;font-family:Georgia,"Times New Roman",serif}
+.mode-arena .arena-rules-overlay .qr-sub{font-size:12px;color:#a9a59c;margin-top:4px}
+.mode-arena .arena-rules-overlay .qr-tabs{display:flex;gap:7px;flex-wrap:wrap;margin:16px 0 12px;padding:12px 0 12px;border-bottom:1px solid #3a3329;position:sticky;top:-18px;z-index:2;background:#151516}
+.mode-arena .arena-rules-overlay .qr-tab{min-width:120px}
+.mode-arena .arena-rules-overlay .qr-tab.active{border-color:#b48b4c;background:linear-gradient(180deg,#59401f,#302416);color:#fff1d0}
+.mode-arena .arena-rules-overlay .qr-page{display:none;grid-template-columns:1fr 1fr;gap:10px}
+.mode-arena .arena-rules-overlay .qr-page.active{display:grid}
+.mode-arena .arena-rules-overlay .qr-card{background:#131311;border:1px solid #3b3429;border-radius:9px;padding:12px;font-size:13px;line-height:1.48}
+.mode-arena .arena-rules-overlay .qr-card b{color:#ead2a2;font-size:13.5px}
+.mode-arena .arena-rules-overlay .qr-card p{margin:6px 0 0;color:#ddd}
+.mode-arena .arena-rules-overlay .qr-example{margin-top:8px;padding:8px 9px;border-left:3px solid #9f7c46;background:#181612;color:#e7d6b6;border-radius:4px}
+@media(max-width:680px){.mode-arena .arena-rules-overlay .qr-page.active{grid-template-columns:1fr}.mode-arena .arena-rules-overlay .qr-modal{padding:14px}.mode-arena .arena-rules-overlay .qr-tab{min-width:auto;flex:1}.mode-arena .arena-rules-overlay .qr-head{align-items:center}}

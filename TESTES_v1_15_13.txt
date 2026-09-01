@@ -1,0 +1,16 @@
+BATALHA NAS SOMBRAS — TESTES v1.15.13
+
+[OK] Todos os arquivos JS passaram em `node --check`.
+[OK] Clássico possui exatamente um #start e um #readyStatus.
+[OK] Clássico Online possui exatamente um #start e um #readyStatus.
+[OK] Botão Pronto não permanece no cabeçalho do Clássico.
+[OK] Botão Pronto não permanece no topo do Clássico Online.
+[OK] Nos dois modos o botão está no bloco de preparação imediatamente antes do tabuleiro.
+[OK] IDs usados pelos JS foram preservados; nenhuma lógica precisou ser alterada.
+[OK] `src/worker.js` idêntico à v1.15.12.
+[OK] `wrangler.jsonc` idêntico à v1.15.12.
+
+Arquivos ativos alterados:
+- public/index.html
+- public/multiplayer.html
+- public/ui-v1157.css

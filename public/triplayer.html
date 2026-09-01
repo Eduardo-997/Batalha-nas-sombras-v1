@@ -50,23 +50,34 @@
 <div class="panel"><div class="panel-title">AÇÃO</div><div id="status">Preparando Arena.</div><div class="panel-title" style="margin-top:10px">DISPONÍVEIS</div><div id="available">—</div></div>
 </aside>
 </div></div>
-<div class="modal hidden" id="rulesModal"><div class="modalbox"><div class="row between"><div><h2 style="margin-bottom:2px">📖 Regras da Arena</h2><div class="muted small">Resumo organizado das regras que mudam ou importam no modo com três exércitos.</div></div><button id="closeRules">Fechar</button></div><div class="rulesgrid" style="margin-top:14px">
-<div class="rules-section">Partida e rodadas</div>
-<div class="rulecard"><b>🏆 Objetivo</b><p>Cada exército começa com 4 personagens originais. Ao confirmar 3 perdas originais, esse jogador é eliminado e suas unidades restantes deixam a Arena. O último exército ativo vence.</p></div>
-<div class="rulecard"><b>🔄 Ordem</b><p>A ordem-base é A → B → C. Jogadores eliminados ou sem ativações disponíveis são pulados automaticamente.</p></div>
-<div class="rulecard"><b>⚖️ Limite de ativações</b><p>Cada unidade pode agir uma vez por rodada, mas a vantagem numérica é limitada. O exército com mais unidades pode ter no máximo <strong>+1 ativação</strong> em relação ao exército ativo com menos unidades.</p><div class="rule-example">Exemplo: A=4, B=4, C=2 → A ativa 3, B ativa 3 e C ativa 2. Cada jogador escolhe quais unidades usar.</div></div>
-<div class="rulecard"><b>🌿 Turno compartilhado</b><p>Druida e Galho-Vivo compartilham a mesma ativação e contam como uma única unidade para esse limite.</p></div>
-<div class="rules-section">Ação e combate</div>
-<div class="rulecard"><b>🎯 Ativação</b><p>Escolha uma unidade → movimento opcional → ataque OU habilidade opcional → encerrar. Apenas uma ação real compromete o turno.</p></div>
-<div class="rulecard"><b>⚔️ Confronto Direto</b><p>Entrar numa casa inimiga dispara o sistema de arquétipos. O vencedor causa 1 de dano; se o derrotado sobreviver, a invasão pode ser repelida.</p></div>
-<div class="rulecard"><b>🛡️ 📜 🗡️ Arquétipos</b><p>Vanguarda vence Executor, Executor vence Estrategista e Estrategista vence Vanguarda. Coringa vence os demais arquétipos; Condenado perde para todos os outros. Arquétipos iguais empatam.</p></div>
-<div class="rulecard"><b>↔️ Adjacência</b><p>Compartilhar borda é adjacência normal. Encostar só pela ponta é diagonal. Peças comuns usam conexões normais; exceções aparecem nas fichas.</p></div>
-<div class="rules-section">Informação e campo</div>
-<div class="rulecard"><b>👁️ PER</b><p>Percepção detecta presença pelas conexões do mapa. A informação continua filtrada por jogador; ninguém recebe posições ocultas ilegalmente.</p></div>
-<div class="rulecard"><b>✨ Alc. Hab.</b><p>É o Alcance de Habilidade. Ao selecionar uma habilidade, a marcação mostra o alcance final real, incluindo bônus ativos.</p></div>
-<div class="rulecard"><b>💥 Ataques visíveis</b><p>Quando um exército ataca, os outros exércitos ativos recebem a marca da casa atacada. Vários 💥 podem ficar acumulados e só somem quando <strong>você encerra sua próxima ativação</strong>.</p></div>
-<div class="rulecard"><b>🏰 Postos</b><p>Cada jogador possui 2 Postos públicos. Sabote um Posto inimigo estando adjacente e gaste a ação para escolher um benefício ainda disponível.</p></div>
-<div class="rulecard"><b>🌳 Terreno e habilidades</b><p>Árvores bloqueiam caminho e posicionamento. Druida pode interagir com árvores vivas; armadilhas continuam ocultas ao inimigo. Detalhes específicos ficam na ficha de cada personagem.</p></div>
+<div class="modal hidden qr-overlay arena-rules-overlay" id="rulesModal"><div class="modalbox qr-modal" role="dialog" aria-modal="true" aria-labelledby="arenaRulesTitle">
+<div class="qr-head"><div><h2 id="arenaRulesTitle">📖 Regras da Arena</h2><div class="qr-sub">Encontre rapidamente a regra que precisa consultar.</div></div><button id="closeRules" type="button">Fechar</button></div>
+<div class="qr-tabs" role="tablist"><button class="qr-tab active" data-tab="partida" type="button">🎲 Partida</button><button class="qr-tab" data-tab="combate" type="button">⚔️ Combate</button><button class="qr-tab" data-tab="info" type="button">👁️ Informação</button><button class="qr-tab" data-tab="campo" type="button">🏰 Campo</button></div>
+<div class="qr-content">
+<section class="qr-page active" data-page="partida">
+<div class="qr-card"><b>🏆 Objetivo</b><p>Cada exército começa com 4 personagens originais. Ao confirmar 3 perdas originais, esse jogador é eliminado e suas unidades restantes deixam a Arena. O último exército ativo vence.</p></div>
+<div class="qr-card"><b>🔄 Ordem</b><p>A ordem-base é A → B → C. Jogadores eliminados ou sem ativações disponíveis são pulados automaticamente.</p></div>
+<div class="qr-card"><b>⚖️ Limite de ativações</b><p>Cada unidade pode agir uma vez por rodada, mas a vantagem numérica é limitada. O exército com mais unidades pode ter no máximo <strong>+1 ativação</strong> em relação ao exército ativo com menos unidades.</p><div class="qr-example">Exemplo: A=4, B=4, C=2 → A ativa 3, B ativa 3 e C ativa 2. Cada jogador escolhe quais unidades usar.</div></div>
+<div class="qr-card"><b>🌿 Turno compartilhado</b><p>Druida e Galho-Vivo compartilham a mesma ativação e contam como uma única unidade para esse limite.</p></div>
+</section>
+<section class="qr-page" data-page="combate">
+<div class="qr-card"><b>🎯 Ativação</b><p>Escolha uma unidade → movimento opcional → ataque <strong>ou</strong> habilidade opcional → encerrar. Apenas uma ação real compromete o turno.</p></div>
+<div class="qr-card"><b>⚔️ Confronto Direto</b><p>Entrar numa casa inimiga dispara o sistema de arquétipos. O vencedor causa 1 de dano; se o derrotado sobreviver, a invasão pode ser repelida.</p></div>
+<div class="qr-card"><b>🛡️ 📜 🗡️ Arquétipos</b><p>Vanguarda vence Executor, Executor vence Estrategista e Estrategista vence Vanguarda. Coringa vence os demais arquétipos; Condenado perde para todos os outros. Arquétipos iguais empatam.</p></div>
+<div class="qr-card"><b>↔️ Adjacência</b><p>Compartilhar borda é adjacência normal. Encostar só pela ponta é diagonal. Peças comuns usam conexões normais; exceções aparecem nas fichas.</p></div>
+</section>
+<section class="qr-page" data-page="info">
+<div class="qr-card"><b>👁️ PER — Percepção</b><p>Percepção detecta presença pelas conexões do mapa. A informação continua filtrada por jogador; ninguém recebe posições ocultas ilegalmente.</p></div>
+<div class="qr-card"><b>✨ Alc. Hab. — Alcance de Habilidade</b><p>Ao selecionar uma habilidade, a marcação mostra o alcance final real, incluindo bônus ativos.</p></div>
+<div class="qr-card"><b>💥 Local de ataque inimigo</b><p>Quando um exército ataca, os outros exércitos ativos recebem a marca da casa atacada. Vários 💥 podem ficar acumulados e só somem quando <strong>você encerra sua próxima ativação</strong>.</p></div>
+<div class="qr-card"><b>🕵️ Informação oculta</b><p>Cada jogador recebe apenas as informações que poderia conhecer legalmente. Posições ocultas não são entregues aos outros jogadores nem às IAs.</p></div>
+</section>
+<section class="qr-page" data-page="campo">
+<div class="qr-card"><b>🏰 Postos de Operação</b><p>Cada jogador possui 2 Postos públicos. Sabote um Posto inimigo estando adjacente e gaste a ação para escolher um benefício ainda disponível.</p></div>
+<div class="qr-card"><b>🌳 Árvores e terreno</b><p>Árvores bloqueiam caminho e posicionamento. Druida pode interagir com árvores vivas e outras exceções aparecem nas fichas.</p></div>
+<div class="qr-card"><b>🪤 Armadilhas</b><p>Armadilhas continuam ocultas aos adversários até que suas próprias regras revelem ou ativem o efeito.</p></div>
+<div class="qr-card"><b>📚 Habilidades específicas</b><p>Os detalhes completos de cada personagem ficam na ficha. Esta janela resume apenas as regras gerais da Arena.</p></div>
+</section>
 </div></div></div>
 <script src="audio.js"></script><script src="tri-map-global.js"></script><script src="tri-core-global.js"></script><script src="replay.js"></script><script src="battle-presentation.js"></script><script src="tri-ui-global.js"></script><script src="ui-accessibility.js"></script>
 </body></html>
