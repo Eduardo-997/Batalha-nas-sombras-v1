@@ -296,3 +296,31 @@ button:not(:disabled):active,a.mode-btn:active,a.toplink:active,.btn:active{tran
 /* v1.15.17 — leitura de turno no Online */
 .controls button:disabled{opacity:.42;cursor:not-allowed;filter:saturate(.55);}
 .context.waiting-turn{opacity:.82;}
+
+
+/* v1.15.23 — tabuleiro 8x8 responsivo no celular (Clássico, Online e Treino). */
+@media(max-width:600px){
+  .mode-classic .board-scroll,.mode-online .board-scroll,.mode-training .board-scroll{overflow-x:hidden!important;width:100%;padding:6px!important}
+  .mode-classic .board,.mode-online .board,.mode-training .board{
+    --bns-cell:calc((100vw - 72px)/8);
+    --bns-axis:22px;
+    --bns-gap:2px;
+    width:100%!important;
+    max-width:100%!important;
+    grid-template-columns:var(--bns-axis) repeat(8,minmax(0,var(--bns-cell)))!important;
+    gap:var(--bns-gap)!important;
+  }
+  .mode-classic .cell,.mode-online .cell,.mode-training .cell{width:var(--bns-cell)!important;height:var(--bns-cell)!important;min-width:0!important;font-size:clamp(16px,5.2vw,22px)!important;border-radius:6px!important}
+  .mode-classic .rowaxis,.mode-online .rowaxis,.mode-training .rowaxis{width:var(--bns-axis)!important;height:var(--bns-cell)!important}
+  .mode-classic .axis,.mode-online .axis,.mode-training .axis{font-size:9px!important}
+  .mode-classic .base-icon,.mode-online .base-icon,.mode-training .base-icon{font-size:clamp(15px,4.8vw,20px)!important}
+  .mode-classic .base-label,.mode-online .base-label,.mode-training .base-label{font-size:6px!important;padding:0 1px!important}
+  .mode-classic .stack-second,.mode-online .stack-second,.mode-training .stack-second{font-size:12px!important}
+  .mode-classic .marker,.mode-online .marker,.mode-training .marker{font-size:10px!important}
+  .mode-classic .impact,.mode-online .impact,.mode-training .impact{font-size:13px!important;right:-2px!important;top:-3px!important}
+  .mode-classic .controls,.mode-online .controls,.mode-training .controls{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .mode-classic .controls button,.mode-online .controls button,.mode-training .controls button{font-size:11px!important;padding:7px 4px!important}
+}
+@media(max-width:390px){
+  .mode-classic .board,.mode-online .board,.mode-training .board{--bns-cell:calc((100vw - 62px)/8);--bns-axis:18px}
+}

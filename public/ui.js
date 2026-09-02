@@ -42,7 +42,7 @@
     "Cavaleiro":"Não possui habilidade ativa; compensa com M3 e ataque normal.",
     "Slime":"Ao cair, divide-se em 2 Mini-Slimes. A perda só conta quando toda a linhagem morrer; os Mini-Slimes herdam seus bônus.",
     "Zumbi":"Na primeira morte, não conta como eliminação. Levanta-se na rodada seguinte com 1 de Vida e, depois de 3 turnos próprios, cai definitivamente. Se morrer antes disso, a eliminação é imediata.",
-    "Druida":"Pode entrar em árvores vivas e não é detectado por PER enquanto estiver nelas. Desperta uma árvore dentro do Alc. Hab. como Galho-Vivo. Druida e Galho-Vivo compartilham a ativação; se o Druida morrer, o Galho-Vivo volta a ser uma árvore normal.",
+    "Druida":"Pode entrar em árvores vivas e não é detectado por PER enquanto estiver nelas. Desperta uma árvore dentro do Alc. Hab. como Galho-Vivo. Druida e Galho-Vivo compartilham o mesmo turno; se o Druida morrer, o Galho-Vivo volta a ser uma árvore normal.",
     "Vidente":"Escolhe 1 casa principal dentro do Alc. Hab. e mais 3 casas adjacentes a ela por lado ou diagonal, revelando as 4.",
     "Mago do Espelho":"Cria 1 Espelho dentro do Alc. Hab. A distância é medida em passos ortogonais; com Alc. Hab. 2, uma casa diagonal também fica ao alcance. O Espelho gera falsa presença e reflete o primeiro ataque; criar outro substitui o anterior.",
     "Necromante":"Ergue um Esqueleto usando um cadáver dentro do Alc. Hab. Limite de 1 Esqueleto vivo por Necromante.",
@@ -485,7 +485,7 @@
     if(selected.length!==4||setupPos.size!==4||setupBasePos.size!==2){setStatus('Escolha e posicione exatamente 4 personagens e 2 Postos.');return;}
     const setup=selected.map(name=>({name,coord:[...setupPos].find(([,n])=>n===name)?.[0]}));const bases=[setupBasePos.get(1),setupBasePos.get(2)];
     setStatus('Você: pronto · IA: pronta. Iniciando partida...');
-    aiDifficulty=aiDifficultyEl?.value||'normal';const r=referee.startGame(setup,bases,aiDifficulty);if(replay){replay.clear();replay.capture('Início da partida');}rosterCollapsed=true;setStatus(`${r.status} Dificuldade: ${aiDifficulty==='easy'?'Fácil':aiDifficulty==='hard'?'Difícil':aiDifficulty==='extreme'?'Extrema':'Normal'}.`);render();
+    aiDifficulty=aiDifficultyEl?.value||'normal';const r=referee.startGame(setup,bases,aiDifficulty);if(replay){replay.clear();replay.capture('Início da partida');}rosterCollapsed=true;setStatus(`${r.status} Dificuldade: ${aiDifficulty==='easy'?'Fácil':aiDifficulty==='hard'?'Difícil':aiDifficulty==='extreme'?'Extrema':'Normal'}.`);render();if(view().turn==='enemy')scheduleAi(450);
   });
   keepDoppelBtn.addEventListener('click',()=>{const r=player.chooseDoppelCopy(false);setStatus(r.status);render();});
   copyDoppelBtn.addEventListener('click',()=>{const r=player.chooseDoppelCopy(true);setStatus(r.status);render();});

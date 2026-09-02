@@ -135,7 +135,7 @@ __refRoot.GameReferee = class GameReferee {
 
   reset(){
     this.#s={
-      phase:'setup', mode:null, round:1, turn:'player', idSeq:1, gameOver:false, result:null, aiDifficulty:'normal',
+      phase:'setup', mode:null, round:1, turn:'player', roundStarter:'player', idSeq:1, gameOver:false, result:null, aiDifficulty:'normal',
       pieces:{player:[],enemy:[]}, bases:[], chosenBaseBonuses:{player:[],enemy:[]}, corpses:[], mirrors:[], pendingSlimeSplits:[],
       history:{player:[],enemy:[]}, intel:{player:[],enemy:[]}, impact:{player:null,enemy:null}, combatMarks:{player:[],enemy:[]}, combatHold:{player:false,enemy:false}, perceptionHints:{player:[],enemy:[]},
       seer:{player:new Set(),enemy:new Set()}, seerExpires:{player:false,enemy:false},
@@ -206,10 +206,11 @@ __refRoot.GameReferee = class GameReferee {
       for(const x of setup){const d=this.#R.byName[x.name];this.#s.pieces[side].push({id:(side==='player'?'p':'e')+this.#s.idSeq++,owner:side,name:d.name,identity:d.name,hp:d.v,coord:x.coord,alive:true,activated:false,original:true,form:null,copied:null,mirrorCooldown:0,effects:[],bonusM:0,bonusV:0,bonusA:0,bonusRange:0,bonusAH:0,bonusRadarAdvanced:false,bonusRadarExpanded:false});}
       bases.forEach((coord,i)=>this.#s.bases.push({id:(side==='player'?'bp':'be')+(i+1),owner:side,coord,sabotaged:false}));
     }
-    this.#s.phase='play';this.#s.mode='multiplayer';this.#s.round=1;this.#s.turn='player';this.#s.gameOver=false;this.#s.result=null;
-    this.#addHistory('player','🎲 Clássico iniciado. Você começa. 3 eliminações vencem.');
-    this.#addHistory('enemy','🎲 Clássico iniciado. O adversário começa. 3 eliminações vencem.');
-    return this.#ok('Partida Clássica iniciada.');
+    const starter=Math.random()<.5?'player':'enemy';
+    this.#s.phase='play';this.#s.mode='multiplayer';this.#s.round=1;this.#s.roundStarter=starter;this.#s.turn=starter;this.#s.gameOver=false;this.#s.result=null;
+    this.#addHistory('player',`🎲 Clássico iniciado. ${starter==='player'?'Você':'O adversário'} começa a rodada 1. A prioridade inicial alterna a cada rodada.`);
+    this.#addHistory('enemy',`🎲 Clássico iniciado. ${starter==='enemy'?'Você':'O adversário'} começa a rodada 1. A prioridade inicial alterna a cada rodada.`);
+    return this.#ok(`Partida Clássica iniciada. ${starter==='player'?'Jogador 1':'Jogador 2'} começa.`);
   }
 
   startGame(playerSetup,playerBases,difficulty='normal'){
@@ -240,10 +241,11 @@ __refRoot.GameReferee = class GameReferee {
     this.#s.bases=playerBases.map((coord,i)=>({id:'bp'+(i+1),owner:'player',coord,sabotaged:false}));
     this.#s.aiDifficulty=['easy','normal','hard','extreme'].includes(difficulty)?difficulty:'normal';
     this.#enemySetup(this.#s.aiDifficulty);
-    this.#s.phase='play'; this.#s.mode='solo'; this.#s.round=1; this.#s.turn='player'; this.#s.gameOver=false; this.#s.result=null;
-    this.#addHistory('player','🎲 Partida iniciada. 4 peças e 2 Postos por lado; 3 eliminações vencem.');
-    this.#addHistory('enemy','🎲 Partida iniciada. 4 peças e 2 Postos por lado; 3 eliminações vencem.');
-    return this.#ok('Partida iniciada.');
+    const starter=Math.random()<.5?'player':'enemy';
+    this.#s.phase='play'; this.#s.mode='solo'; this.#s.round=1; this.#s.roundStarter=starter; this.#s.turn=starter; this.#s.gameOver=false; this.#s.result=null;
+    this.#addHistory('player',`🎲 Partida iniciada. ${starter==='player'?'Você':'A IA'} começa a rodada 1. A prioridade inicial alterna a cada rodada.`);
+    this.#addHistory('enemy',`🎲 Partida iniciada. ${starter==='enemy'?'Você':'O jogador'} começa a rodada 1. A prioridade inicial alterna a cada rodada.`);
+    return this.#ok(`Partida iniciada. ${starter==='player'?'Você começa':'A IA começa'}.`);
   }
 
   startTrainingGame(playerSetup,enemySetup,playerBases,enemyBases){
@@ -277,7 +279,7 @@ __refRoot.GameReferee = class GameReferee {
     this.#s.phase='play';this.#s.mode='training';this.#s.round=1;this.#s.turn='player';this.#s.gameOver=false;this.#s.result=null;
     this.#addHistory('player','🧪 Treino iniciado. 4 peças e 2 Postos por lado; ambos os lados podem ser controlados livremente.');
     this.#addHistory('enemy','🧪 Treino iniciado. 4 peças e 2 Postos por lado; ambos os lados podem ser controlados livremente.');
-    return this.#ok('Treino iniciado. Controle qualquer lado, teste os Postos e repita ativações livremente.');
+    return this.#ok('Treino iniciado. Controle qualquer lado, teste os Postos e repita turnos livremente.');
   }
 
   #advanceTrainingRound(){
@@ -433,7 +435,7 @@ __refRoot.GameReferee = class GameReferee {
   #selectPiece(side,id){
     const bad=this.#validateTurn(side); if(bad)return bad;
     const p=this.#pieceById(side,id); if(!p)return this.#fail('Peça indisponível.');
-    if(this.#s.mode!=='training'&&!this.#hasActivationLeft(side))return this.#fail('Seu limite de ativações desta rodada já foi atingido.');
+    if(this.#s.mode!=='training'&&!this.#hasActivationLeft(side))return this.#fail('Seu limite de turnos desta rodada já foi atingido.');
     if(this.#s.mode!=='training'&&p.activated)return this.#fail(`${this.#R.defOf(p).name} já agiu nesta rodada.`);
     const mate=this.#shareTurnMate(p);if(this.#s.mode!=='training'&&mate?.activated)return this.#fail('Druida e Galho-Vivo compartilham o mesmo turno nesta rodada.');
     const a=this.#activation(side);
@@ -842,7 +844,7 @@ __refRoot.GameReferee = class GameReferee {
 
   #advanceAfterActivation(side){
     const pLeft=this.#hasActivationLeft('player'),eLeft=this.#hasActivationLeft('enemy');
-    if(!pLeft&&!eLeft){this.#s.round++;this.#tickRoundEffects();for(const p of this.#pieces('player'))p.activated=false;for(const p of this.#pieces('enemy'))p.activated=false;this.#s.roundActivations={player:0,enemy:0};this.#processZombieRevives();this.#addHistory('player',`🔄 Rodada ${this.#s.round} começou.`);this.#addHistory('enemy',`🔄 Rodada ${this.#s.round} começou.`);this.#s.turn='player';return;}
+    if(!pLeft&&!eLeft){this.#s.round++;this.#tickRoundEffects();for(const p of this.#pieces('player'))p.activated=false;for(const p of this.#pieces('enemy'))p.activated=false;this.#s.roundActivations={player:0,enemy:0};this.#processZombieRevives();this.#s.roundStarter=this.#s.roundStarter==='player'?'enemy':'player';this.#s.turn=this.#hasActivationLeft(this.#s.roundStarter)?this.#s.roundStarter:this.#other(this.#s.roundStarter);this.#addHistory('player',`🔄 Rodada ${this.#s.round} começou. ${this.#s.turn==='player'?'Você':'O adversário'} tem a prioridade inicial.`);this.#addHistory('enemy',`🔄 Rodada ${this.#s.round} começou. ${this.#s.turn==='enemy'?'Você':'O adversário'} tem a prioridade inicial.`);return;}
     if(side==='player')this.#s.turn=eLeft?'enemy':'player';else this.#s.turn=pLeft?'player':(eLeft?'enemy':'player');
   }
 
@@ -858,11 +860,10 @@ __refRoot.GameReferee = class GameReferee {
     return JSON.stringify(this.#s,(k,v)=>v instanceof Set?{__set:[...v]}:v);
   }
   importState(raw){
-    if(!raw)return;this.#s=JSON.parse(raw,(k,v)=>v&&typeof v==='object'&&Array.isArray(v.__set)?new Set(v.__set):v);if(!this.#s.doppelChoice)this.#s.doppelChoice={player:null,enemy:null};if(!this.#s.roundActivations)this.#s.roundActivations={player:0,enemy:0};if(!this.#s.trees)this.#s.trees=[{coord:'C3',state:'live'},{coord:'F6',state:'live'}];if(!this.#s.traps)this.#s.traps={player:[],enemy:[]};if(!this.#s.spotReveals)this.#s.spotReveals={player:{},enemy:{}};if(!this.#s.combatMarks)this.#s.combatMarks={player:[],enemy:[]};if(!this.#s.combatHold)this.#s.combatHold={player:false,enemy:false};for(const side of ['player','enemy'])for(const p of this.#pieces(side)){if(!Array.isArray(p.effects))p.effects=[];if(p.bonusAH==null)p.bonusAH=0;if(p.turnsTaken==null)p.turnsTaken=0;}
+    if(!raw)return;this.#s=JSON.parse(raw,(k,v)=>v&&typeof v==='object'&&Array.isArray(v.__set)?new Set(v.__set):v);if(!this.#s.doppelChoice)this.#s.doppelChoice={player:null,enemy:null};if(!this.#s.roundStarter)this.#s.roundStarter='player';if(!this.#s.roundActivations)this.#s.roundActivations={player:0,enemy:0};if(!this.#s.trees)this.#s.trees=[{coord:'C3',state:'live'},{coord:'F6',state:'live'}];if(!this.#s.traps)this.#s.traps={player:[],enemy:[]};if(!this.#s.spotReveals)this.#s.spotReveals={player:{},enemy:{}};if(!this.#s.combatMarks)this.#s.combatMarks={player:[],enemy:[]};if(!this.#s.combatHold)this.#s.combatHold={player:false,enemy:false};for(const side of ['player','enemy'])for(const p of this.#pieces(side)){if(!Array.isArray(p.effects))p.effects=[];if(p.bonusAH==null)p.bonusAH=0;if(p.turnsTaken==null)p.turnsTaken=0;}
   }
 
 };
-
 
 const actionMap={
   selectPiece:(c,a)=>c.selectPiece(a.pieceId),cancelSelection:c=>c.cancelSelection(),cancelMode:c=>c.cancelMode(),startMove:c=>c.startMove(),moveStep:(c,a)=>c.moveStep(a.to),stopMove:c=>c.stopMove(),startAttack:c=>c.startAttack(),attack:(c,a)=>c.attack(a.to),selectPyroTarget:(c,a)=>c.selectPyroTarget(a.to),confirmPyroAttack:c=>c.confirmPyroAttack(),startAbility:c=>c.startAbility(),useSeer:(c,a)=>c.useSeer(a.cells),raiseAt:(c,a)=>c.raiseAt(a.coord),placeMirror:(c,a)=>c.placeMirror(a.coord),awakenTree:(c,a)=>c.awakenTree(a.coord),placeTrap:(c,a)=>c.placeTrap(a.coord),bardBuff:(c,a)=>c.bardBuff(a.targetPieceId,a.stat),endActivation:c=>c.endActivation(),chooseCombatPosition:(c,a)=>c.chooseCombatPosition(!!a.advance),sabotageBase:(c,a)=>c.sabotageBase(a.baseId,a.bonusId,a.targetPieceId||null),chooseDoppelCopy:(c,a)=>c.chooseDoppelCopy(!!a.copyNew)
@@ -969,7 +970,7 @@ export class TriGameRoom {
       if(this.started)return this.send(ws,{type:'result',ok:false,status:'A partida já começou.'});const res=this.referee.validateSetup(side,msg.setup,msg.bases);if(!res.ok)return this.send(ws,{type:'result',ok:false,status:res.status});
       this.ready[side]={setup:msg.setup,bases:msg.bases};this.send(ws,{type:'result',ok:true,status:'Pronto. Aguardando o outro jogador.'});
       if(this.ready.A&&this.ready.B){const st=this.referee.startOnline(this.ready.A.setup,this.ready.A.bases,this.ready.B.setup,this.ready.B.bases,this.difficulty);if(!st.ok)return this.broadcast({type:'result',ok:false,status:st.status});this.started=true;this.ai=new TriAI('C',this.difficulty);this.resetReplay();}
-      await this.safePersist();this.broadcastRoomState();this.broadcastViews();return;
+      await this.safePersist();this.broadcastRoomState();this.broadcastViews();if(this.started){await this.runAI();await this.safePersist();this.broadcastViews();}return;
     }
     if(msg.type==='action'){
       if(!this.started)return this.send(ws,{type:'result',ok:false,status:'A partida ainda não começou.'});const action=msg.action||{};let res;try{res=applyTriAction(this.referee.client(side),action);}catch(e){console.error(e);res={ok:false,status:'Erro interno.'};}

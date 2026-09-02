@@ -19,7 +19,7 @@
       <div class="qr-content">
         <section class="qr-page active" data-page="partida">
           <div class="qr-card"><b>🏆 Objetivo</b><p>Elimine <strong>3 dos 4 personagens originais</strong> do adversário. Invocações não contam como perda original.</p></div>
-          <div class="qr-card"><b>🔄 Rodadas e turnos</b><p>Cada unidade pode ter um turno por rodada. A vantagem numérica é limitada: um lado pode ter no máximo <strong>1 turno de unidade a mais que o adversário</strong> naquela rodada.</p><div class="qr-example">Exemplo: em 4 × 2, o lado com 4 escolhe quais <strong>3</strong> unidades vai usar; o lado com 2 usa as <strong>2</strong>.</div></div>
+          <div class="qr-card"><b>🔄 Rodadas e turnos</b><p>Cada unidade pode ter um turno por rodada. Na rodada 1, quem tem a prioridade inicial é sorteado entre os dois lados; a cada nova rodada essa prioridade alterna. A vantagem numérica é limitada: um lado pode ter no máximo <strong>1 turno de unidade a mais que o adversário</strong> naquela rodada.</p><div class="qr-example">Exemplo: em 4 × 2, o lado com 4 escolhe quais <strong>3</strong> unidades vai usar; o lado com 2 usa as <strong>2</strong>.</div></div>
           <div class="qr-card"><b>🎯 Como funciona um turno</b><p>Escolha uma unidade → movimento opcional → ataque <strong>ou</strong> habilidade opcional → encerrar. Selecionar uma unidade ou consultar sua ficha não gasta o turno.</p></div>
           <div class="qr-card"><b>🌿 Turnos compartilhados</b><p>Druida e Galho-Vivo compartilham o mesmo turno. Usar um deles gasta o turno dos dois naquela rodada.</p></div>
         </section>
