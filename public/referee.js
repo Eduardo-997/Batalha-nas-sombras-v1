@@ -13,7 +13,7 @@ __refRoot.GameReferee = class GameReferee {
       history:{player:[],enemy:[]}, intel:{player:[],enemy:[]}, impact:{player:null,enemy:null}, combatMarks:{player:[],enemy:[]}, combatHold:{player:false,enemy:false}, perceptionHints:{player:[],enemy:[]},
       seer:{player:new Set(),enemy:new Set()}, seerExpires:{player:false,enemy:false},
       activation:{player:null,enemy:null}, roundActivations:{player:0,enemy:0}, pendingCombat:null, doppelChoice:{player:null,enemy:null},
-      trees:[{coord:'C3',state:'live'},{coord:'F6',state:'live'}], traps:{player:[],enemy:[]}, spotReveals:{player:{},enemy:{}}
+      trees:[{coord:'C3',state:'live'},{coord:'F6',state:'live'}], traps:{player:[],enemy:[]}, spotReveals:{player:{},enemy:{}}, replayEvent:null
     };
   }
 
@@ -39,6 +39,7 @@ __refRoot.GameReferee = class GameReferee {
       awakenTree:(coord)=>self.#awakenTree(side,coord),
       placeTrap:(coord)=>self.#placeTrap(side,coord),
       bardBuff:(targetId,stat)=>self.#bardBuff(side,targetId,stat),
+      shieldLink:(targetId=null)=>self.#shieldLink(side,targetId),
       endActivation:()=>self.#endActivationRequest(side),
       chooseCombatPosition:(advance)=>self.#chooseCombatPosition(side,advance),
       sabotageBase:(baseId,bonusId,targetPieceId=null)=>self.#sabotageBase(side,baseId,bonusId,targetPieceId),
@@ -234,6 +235,9 @@ __refRoot.GameReferee = class GameReferee {
   #abilityDistance(p,c){return this.#R.man(p.coord,c);}
   #inAbilityRange(p,c,allowSelf=false){const ah=this.#R.defOf(p).ah||0,dist=this.#abilityDistance(p,c);return (allowSelf?dist>=0:dist>0)&&dist<=ah;}
   #shareTurnMate(p){if(!p)return null;if(p.name==='Druida')return this.#pieces(p.owner).find(x=>x.alive&&x.summonType==='livingBranch'&&x.druidId===p.id)||null;if(p.summonType==='livingBranch')return this.#rawPieceById(p.owner,p.druidId);return null;}
+  #linkedShieldFor(p){if(!p)return null;return this.#pieces(p.owner).find(x=>x.alive&&x.linkedToId===p.id)||null;}
+  #clearShieldLinks(p){if(!p)return;if(p.linkedToId)p.linkedToId=null;for(const q of this.#pieces(p.owner))if(q.linkedToId===p.id)q.linkedToId=null;}
+  #noteReplay(type,side,data={}){this.#s.replayEvent={type,side,round:this.#s.round,...structuredClone(data)};}
   #spottedFor(viewer,p){const x=this.#s.spotReveals?.[viewer]?.[p.id];return !!x&&p.alive;}
   #siegeActive(){return this.#s.phase==='play'&&this.#s.bases.length>=4&&this.#s.bases.every(b=>b.sabotaged);}
   #siegeCells(){if(!this.#siegeActive())return [];const out=[];for(let y=0;y<8;y++)for(let x=0;x<8;x++)if(x===0||x===7||y===0||y===7)out.push(this.#R.coord(x,y));return out;}
@@ -248,7 +252,9 @@ __refRoot.GameReferee = class GameReferee {
   #canShareCell(side,p,c){
     if(this.#treeBlocks(p,c)||this.#baseAt(c))return false;
     if(this.#pieceAt(this.#other(side),c))return true;
-    const ps=this.#piecesAt(side,c).filter(x=>x.id!==p.id);if(!ps.length)return true;if(ps.length>=2)return false;return p.name==='Escudeiro'||ps.some(x=>x.name==='Escudeiro');
+    const ps=this.#piecesAt(side,c).filter(x=>x.id!==p.id),isLinker=x=>x?.name==='Escudeiro'||(x?.name==='Doppelgänger'&&x?.copied==='Escudeiro');
+    const follower=this.#linkedShieldFor(p);if(follower?.alive&&follower.coord===p.coord&&ps.length)return false;
+    if(!ps.length)return true;if(ps.length>=2)return false;return isLinker(p)||ps.some(isLinker);
   }
   #corpseAt(c){return this.#s.corpses.find(x=>x.coord===c);}
   #mirrorAt(c,owner){return this.#s.mirrors.find(m=>m.coord===c&&m.owner===owner);}
@@ -272,7 +278,7 @@ __refRoot.GameReferee = class GameReferee {
     const d=this.#R.defOf(p);const possessedAway=!!p.possessedBy&&viewerSide===p.owner;
     const extraEffects=[...(p.effects||[]).filter(e=>viewerSide===p.owner||e.public!==false)];
     if(p.paranoia?.revealed&&viewerSide===p.owner)extraEffects.push({id:'paranoia',name:'Paranoia',icon:'🧠',remaining:p.paranoia.remaining,kind:'debuff',tick:'turn'});
-    return {id:p.id,name:p.name,displayName:d.name,icon:d.icon,type:d.type,typeIcon:d.typeIcon||'',hp:p.hp,maxHp:d.v,coord:possessedAway?null:p.coord,alive:possessedAway?false:p.alive,possessedAway,possessing:!!p.possession,activated:p.activated,original:!!p.original,summonType:p.summonType||null,form:p.form||null,copied:p.copied||null,mirrorCooldown:p.mirrorCooldown||0,m:d.m,a:d.a,range:d.range,per:d.per,ah:d.ah||0,diag:!!d.diag,bonusM:p.bonusM||0,bonusV:p.bonusV||0,bonusA:p.bonusA||0,bonusRange:p.bonusRange||0,bonusAH:p.bonusAH||0,radarAdvanced:!!p.bonusRadarAdvanced,radarExpanded:!!p.bonusRadarExpanded,zombiePending:!!p.zombiePending,zombieTurnsLeft:p.zombieTurnsLeft||0,effects:extraEffects.map(e=>({id:e.id||'',name:e.name||'Efeito temporário',icon:e.icon||'⏳',remaining:Math.max(0,Number(e.remaining)||0),kind:e.kind||'neutral',tick:e.tick||'round'}))};
+    return {id:p.id,name:p.name,displayName:d.name,icon:d.icon,type:d.type,typeIcon:d.typeIcon||'',hp:p.hp,maxHp:d.v,coord:possessedAway?null:p.coord,alive:possessedAway?false:p.alive,possessedAway,possessing:!!p.possession,activated:p.activated,original:!!p.original,summonType:p.summonType||null,form:p.form||null,copied:p.copied||null,mirrorCooldown:p.mirrorCooldown||0,m:d.m,a:d.a,range:d.range,per:d.per,ah:d.ah||0,diag:!!d.diag,bonusM:p.bonusM||0,bonusV:p.bonusV||0,bonusA:p.bonusA||0,bonusRange:p.bonusRange||0,bonusAH:p.bonusAH||0,radarAdvanced:!!p.bonusRadarAdvanced,radarExpanded:!!p.bonusRadarExpanded,zombiePending:!!p.zombiePending,zombieTurnsLeft:p.zombieTurnsLeft||0,linkedToId:viewerSide===p.owner?(p.linkedToId||null):null,effects:extraEffects.map(e=>({id:e.id||'',name:e.name||'Efeito temporário',icon:e.icon||'⏳',remaining:Math.max(0,Number(e.remaining)||0),kind:e.kind||'neutral',tick:e.tick||'round'}))};
   }
 
   #getView(side){
@@ -321,7 +327,7 @@ __refRoot.GameReferee = class GameReferee {
   #cancelSelection(side){
     const bad=this.#validateTurn(side); if(bad)return bad;
     const a=this.#activation(side); if(!a)return this.#fail('Nada para cancelar.');
-    if(a.committed)return this.#fail('A turno já foi comprometida.');
+    if(a.committed)return this.#fail('O turno já foi comprometido.');
     this.#s.activation[side]=null; return this.#ok('Seleção cancelada.');
   }
 
@@ -342,7 +348,7 @@ __refRoot.GameReferee = class GameReferee {
   #startMove(side){
     const bad=this.#validateTurn(side); if(bad)return bad;
     const a=this.#activation(side),p=this.#activePiece(side); if(!a||!p)return this.#fail('Selecione uma peça.');
-    const d=this.#R.defOf(p); if(a.movementUsed)return this.#fail(`${d.name} já usou o movimento.`); if(d.m<=0)return this.#fail(`${d.name} tem M0 e não pode se mover.`);
+    const d=this.#R.defOf(p); if(p.linkedToId)return this.#fail(`${this.#R.defOf(p).name} está vinculado e não pode se mover sozinho. Use a habilidade para desvincular primeiro.`); if(a.movementUsed)return this.#fail(`${d.name} já usou o movimento.`); if(d.m<=0)return this.#fail(`${d.name} tem M0 e não pode se mover.`);
     a.mode='move';a.moveRemaining=d.m;return this.#ok(`Prévia de movimento: até ${d.m} ${d.m===1?'passo':'passos'}. Ainda pode cancelar sem gastar.`);
   }
 
@@ -352,11 +358,14 @@ __refRoot.GameReferee = class GameReferee {
     const d=this.#R.defOf(p);
     if(a.moveRemaining<=0||!this.#R.neighbors(p.coord,d.diag).includes(to)||!this.#canShareCell(side,p,to))return this.#fail('Escolha uma casa válida.');
     this.#commit(side);a.movementUsed=true;a.stepsTaken=(a.stepsTaken||0)+1;
-    const from=p.coord,foe=this.#pieceAt(this.#other(side),to);
+    const from=p.coord,foe=this.#pieceAt(this.#other(side),to),linkedShield=this.#linkedShieldFor(p);
+    p.coord=to;
     const trap=this.#triggerTraps(side,p,to);
     if(!p.alive||p.owner!==side){a.mode=null;a.moveRemaining=0;return this.#finishActivation(side);}
-    if(foe&&foe.alive){return this.#resolveDirect(side,p,foe,from,to);}
-    p.coord=to;this.#checkDoppel(side,p);a.moveRemaining--;
+    if(foe&&foe.alive){p.coord=from;return this.#resolveDirect(side,p,foe,from,to);}
+    if(linkedShield?.alive&&linkedShield.coord===from)linkedShield.coord=to;
+    this.#noteReplay('move',side,{piece:this.#R.defOf(p).name,from,to,linkedShield:linkedShield?.alive&&linkedShield.coord===to?this.#R.defOf(linkedShield).name:null});
+    this.#checkDoppel(side,p);a.moveRemaining--;
     if(a.moveRemaining===0)return this.#finishMove(side);
     return this.#ok(`${d.name}: ${a.moveRemaining===1?'resta':'restam'} ${a.moveRemaining} ${a.moveRemaining===1?'passo':'passos'}.${trap?' Armadilha ativada.':''}`);
   }
@@ -407,6 +416,7 @@ __refRoot.GameReferee = class GameReferee {
     else if(expanded){const parts=[];if(orthHits.length)parts.push('presença ortogonal no alcance');if(diagHits.length)parts.push('presença diagonal no alcance');msg=parts.length?`📶 ${parts.join(' e ')}`:`✓ nenhuma presença no alcance PER${per}`;}
     else msg=orthHits.length?'⚠️ presença inimiga no alcance ortogonal.':`✓ nenhuma presença inimiga no alcance PER${per}.`;
     this.#addIntel(side,`${d.icon} ${d.name}: ${msg}`);
+    this.#noteReplay('perception',side,{piece:d.name,coord:p.coord,detected:!!detected,hints:(this.#s.perceptionHints[side]||[]).map(h=>({...h})),text:msg});
     return this.#ok('Movimento encerrado. Agora ataque, use habilidade, sabote um Posto ou encerre.');
   }
 
@@ -425,7 +435,7 @@ __refRoot.GameReferee = class GameReferee {
     const a=this.#activation(side),p=this.#activePiece(side); if(!a||!p||a.mode!=='attack')return this.#fail('Ataque não iniciado.');
     if(!this.#R.attackCells(p).includes(to))return this.#fail('Casa fora do alcance.');
     if(this.#baseAt(to))return this.#fail('Postos de Operação não podem ser atacados; precisam ser sabotados.');
-    this.#commit(side);
+    this.#commit(side);this.#noteReplay('attack',side,{piece:this.#R.defOf(p).name,from:p.coord,cells:[to]});
     if(this.#isGhost(p)){
       const target=this.#protectedTarget(this.#other(side),to);
       if(target){this.#possess(side,p,target);this.#addHistory(side,`👻 Fantasma possuiu ${this.#R.defOf(target).name}.`);this.#addHistory(this.#other(side),'👻 Uma de suas peças foi possuída; sua localização foi perdida.');}
@@ -450,7 +460,7 @@ __refRoot.GameReferee = class GameReferee {
     const bad=this.#validateTurn(side);if(bad)return bad;
     const a=this.#activation(side),p=this.#activePiece(side);if(!a||!p||a.mode!=='pyro'||p.name!=='Piromante')return this.#fail('Ataque do Piromante não iniciado.');
     const targets=[...(a.pyroTargets||[])];if(targets.length<1||targets.length>2)return this.#fail('Escolha 1 ou 2 casas antes de confirmar.');
-    this.#commit(side);a.mode=null;a.pyroTargets=[];
+    this.#commit(side);a.mode=null;a.pyroTargets=[];this.#noteReplay('attack',side,{piece:'Piromante',from:p.coord,cells:[...targets]});
     this.#addHistory(side,`🔥 Piromante atacou ${targets.length} casa${targets.length===1?'':'s'} na mesma ação.`);
     for(const c of targets)this.#hitAttack(side,p,c);
     return this.#finishActivation(side);
@@ -461,7 +471,8 @@ __refRoot.GameReferee = class GameReferee {
     const a=this.#activation(side),p=this.#activePiece(side); if(!a||!p)return this.#fail('Selecione uma peça.');
     if(a.mode==='move'&&a.committed)return this.#fail('Primeiro termine o movimento.');
     const ab=this.#effectiveAbility(p),ah=this.#R.defOf(p).ah||0;
-    if(ab==='seer'){a.mode='seer';return this.#ok(`👁️ Escolha a casa principal dentro do Alc. Hab. ${ah} + 3 casas adjacentes a ela.`,{ability:'seer'});}
+    if(ab==='seer'){a.mode='seer';return this.#ok(`👁️ Escolha a primeira casa dentro do Alc. Hab. ${ah} e depois 1 casa ligada por lado.`,{ability:'seer'});}
+    if(ab==='shieldLink'){const actor=this.#R.defOf(p).name;if(p.linkedToId){a.mode='shieldUnlink';return this.#ok(`🛡️ ${actor} está vinculado. Confirme para desvincular e gastar este turno.`,{ability:'shieldUnlink',confirm:true});}const mates=this.#piecesAt(side,p.coord).filter(x=>x.id!==p.id&&x.alive);if(!mates.length)return this.#fail(`Para vincular, ${actor} precisa dividir a casa com um aliado.`);a.mode='shieldLink';return this.#ok('🛡️ Escolha o aliado que está na mesma casa para vincular.',{ability:'shieldLink'});}
     if(ab==='raise'){
       const has=this.#pieces(side).some(x=>x.alive&&x.summonType==='skeleton'&&x.summonerId===p.id);if(has)return this.#fail('Este Necromante já controla um Esqueleto vivo.');
       const legal=this.#s.corpses.filter(x=>this.#inAbilityRange(p,x.coord)&&!this.#pieceAt(side,x.coord));
@@ -478,17 +489,22 @@ __refRoot.GameReferee = class GameReferee {
 
   #effectiveAbility(p){
     const name=p.name==='Doppelgänger'?p.copied:p.name;
-    if(name==='Vidente')return'seer';if(name==='Necromante')return'raise';if(name==='Mago do Espelho')return'mirror';if(name==='Druida')return'awaken';if(name==='Sentinela')return'spotTrap';if(name==='Caçador')return'damageTrap';if(name==='Bardo')return'bard';return null;
+    if(name==='Escudeiro')return'shieldLink';if(name==='Vidente')return'seer';if(name==='Necromante')return'raise';if(name==='Mago do Espelho')return'mirror';if(name==='Druida')return'awaken';if(name==='Sentinela')return'spotTrap';if(name==='Caçador')return'damageTrap';if(name==='Bardo')return'bard';return null;
   }
 
   #useSeer(side,cells){
     const bad=this.#validateTurn(side); if(bad)return bad;
     const a=this.#activation(side),p=this.#activePiece(side);if(!a||!p||a.mode!=='seer')return this.#fail('Visão não iniciada.');
-    if(!Array.isArray(cells)||cells.length!==4)return this.#fail('Área inválida.');const s=new Set(cells);if(s.size!==4)return this.#fail('Área inválida.');
-    const main=cells[0],dist=this.#R.man(p.coord,main);if(dist>this.#R.defOf(p).ah)return this.#fail(`A casa principal está fora do Alc. Hab. ${this.#R.defOf(p).ah}.`);
-    const adj=new Set(this.#R.neighbors(main,true));if(cells.slice(1).some(c=>!adj.has(c)))return this.#fail('As 3 casas extras precisam ser adjacentes à casa principal por lado ou diagonal.');
+    if(!Array.isArray(cells)||cells.length!==2||new Set(cells).size!==2)return this.#fail('Selecione 2 casas ligadas.');
+    const main=cells[0],second=cells[1];if(this.#R.man(p.coord,main)>this.#R.defOf(p).ah)return this.#fail(`A primeira casa está fora do Alc. Hab. ${this.#R.defOf(p).ah}.`);if(!this.#R.neighbors(main,false).includes(second))return this.#fail('A segunda casa precisa estar ligada por lado à primeira.');
     this.#commit(side);this.#s.seer[side]=new Set(cells);const seen=this.#pieces(this.#other(side)).filter(e=>e.alive&&this.#s.seer[side].has(e.coord)).length;
-    this.#addIntel(side,`👁️ Área do Vidente: ${seen} ${seen===1?'presença detectada':'presenças detectadas'} agora.`);this.#addHistory(side,'👁️ Vidente ativou visão em 4 casas conectadas.');this.#s.seerExpires[side]=true;a.mode=null;return this.#finishActivation(side);
+    this.#addIntel(side,`👁️ Área do Vidente: ${seen} ${seen===1?'presença detectada':'presenças detectadas'} nas 2 casas.`);this.#addHistory(side,'👁️ Vidente ativou visão em 2 casas ligadas.');this.#noteReplay('seer',side,{piece:this.#R.defOf(p).name,cells:[...cells],seen});this.#s.seerExpires[side]=true;a.mode=null;return this.#finishActivation(side);
+  }
+
+  #shieldLink(side,targetId=null){
+    const bad=this.#validateTurn(side);if(bad)return bad;const a=this.#activation(side),p=this.#activePiece(side);if(!a||!p||this.#effectiveAbility(p)!=='shieldLink'||!['shieldLink','shieldUnlink'].includes(a.mode))return this.#fail('Vínculo não iniciado.');
+    if(a.mode==='shieldUnlink'){if(!p.linkedToId)return this.#fail('Escudeiro não está vinculado.');const target=this.#rawPieceById(side,p.linkedToId),name=target?this.#R.defOf(target).name:'aliado';this.#commit(side);p.linkedToId=null;this.#addHistory(side,`🛡️ ${this.#R.defOf(p).name} se desvinculou de ${name}.`);this.#noteReplay('ability',side,{piece:this.#R.defOf(p).name,ability:'Desvincular',coord:p.coord,text:`Escudeiro se desvinculou de ${name}.`});a.mode=null;return this.#finishActivation(side);}
+    const target=this.#pieceById(side,targetId);if(!target||target.id===p.id||target.coord!==p.coord)return this.#fail('Escolha um aliado vivo na mesma casa do Escudeiro.');this.#commit(side);p.linkedToId=target.id;this.#addHistory(side,`🛡️ ${this.#R.defOf(p).name} se vinculou a ${this.#R.defOf(target).name}. Enquanto estiverem juntos, acompanhará os movimentos do aliado.`);this.#noteReplay('ability',side,{piece:this.#R.defOf(p).name,ability:'Vincular',coord:p.coord,target:this.#R.defOf(target).name,text:`Vinculado a ${this.#R.defOf(target).name}.`});a.mode=null;return this.#finishActivation(side);
   }
 
   #raiseAt(side,c){
@@ -559,7 +575,7 @@ __refRoot.GameReferee = class GameReferee {
   }
   #triggerTraps(moverSide,p,to){
     const enemy=this.#other(moverSide),hits=(this.#s.traps?.[enemy]||[]).filter(t=>t.coord===to);if(!hits.length)return false;let any=false;
-    for(const t of hits){any=true;this.#s.traps[enemy]=this.#s.traps[enemy].filter(x=>x.id!==t.id);if(t.kind==='spot'){this.#s.spotReveals[enemy][p.id]={};this.#addIntel(enemy,`📍 Armadilha da Sentinela revelou ${this.#R.defOf(p).name} em ${to} até o início do próximo turno dessa peça.`);this.#addHistory(moverSide,'🦉 Você ativou uma armadilha inimiga e sua posição foi revelada.');}else{this.#addHistory(enemy,`🕳️ Armadilha do Caçador atingiu ${this.#R.defOf(p).name} antes da resolução da casa.`);this.#addHistory(moverSide,'🕳️ Uma armadilha inimiga causou 1 de dano.');this.#damage(p,1);this.#resolveSlimeSplits();}}
+    for(const t of hits){any=true;this.#s.traps[enemy]=this.#s.traps[enemy].filter(x=>x.id!==t.id);this.#noteReplay('trap',enemy,{coord:to,kind:t.kind,target:this.#R.defOf(p).name});if(t.kind==='spot'){this.#s.spotReveals[enemy][p.id]={};this.#addIntel(enemy,`📍 Armadilha da Sentinela revelou ${this.#R.defOf(p).name} em ${to} até o início do próximo turno dessa peça.`);this.#addHistory(moverSide,'🦉 Você ativou uma armadilha inimiga e sua posição foi revelada.');}else{this.#addHistory(enemy,`🕳️ Armadilha do Caçador atingiu ${this.#R.defOf(p).name} antes da resolução da casa.`);this.#addHistory(moverSide,'🕳️ Uma armadilha inimiga causou 1 de dano.');this.#damage(p,1);this.#resolveSlimeSplits();}}
     return any;
   }
   #possess(side,ghost,target){
@@ -595,7 +611,7 @@ __refRoot.GameReferee = class GameReferee {
     if(p.summonType==='livingBranch'){
       p.alive=false;this.#s.trees.push({coord:p.coord,state:'dead'});this.#addHistory(p.owner,'🌲 Galho-Vivo caiu e virou uma árvore morta.');return;
     }
-    p.alive=false;if(p.name==='Zumbi')p.zombieFinal=true;
+    this.#clearShieldLinks(p);p.alive=false;if(p.name==='Zumbi')p.zombieFinal=true;
     if(p.name==='Druida')this.#collapseDruidBranches(p);
     if(p.name==='Bardo')this.#clearBardEffects(p.id,p.owner);
     if(p.name==='Slime'&&p.original)this.#s.pendingSlimeSplits.push({owner:p.owner,coord:p.coord,lineageId:p.id,bonusM:p.bonusM||0,bonusV:p.bonusV||0,bonusA:p.bonusA||0,bonusRange:p.bonusRange||0,bonusAH:p.bonusAH||0,bonusPer:p.bonusPer||0,bonusRadarAdvanced:!!p.bonusRadarAdvanced,bonusRadarExpanded:!!p.bonusRadarExpanded,effects:(p.effects||[]).map(e=>structuredClone(e))});else this.#createCorpse(p);
@@ -656,7 +672,7 @@ __refRoot.GameReferee = class GameReferee {
 
   #resolveDirect(attackerSide,att,def,from,to){
     const defenderSide=this.#other(attackerSide),r=this.#R.directWinner(att,def),aName=this.#R.defOf(att).name,dName=this.#R.defOf(def).name;const a=this.#activation(attackerSide);if(a){a.mode=null;a.moveRemaining=0;}
-    for(const s of ['player','enemy'])this.#s.combatMarks[s]=[...new Set([...(this.#s.combatMarks[s]||[]),to])];this.#s.combatHold[attackerSide]=true;
+    for(const s of ['player','enemy'])this.#s.combatMarks[s]=[...new Set([...(this.#s.combatMarks[s]||[]),to])];this.#s.combatHold[attackerSide]=true;this.#noteReplay('combat',attackerSide,{coord:to,attacker:aName,defender:dName});
     if(r==='tie'){att.coord=from;this.#addHistory(attackerSide,`↩️ ${aName} foi repelido por ${dName}.`);this.#addHistory(defenderSide,`↩️ ${aName} inimigo foi repelido pelo seu ${dName}.`);return this.#finishActivation(attackerSide);}
     const attackerWins=r==='att',winner=attackerWins?att:def,loser=attackerWins?def:att;
     if(this.#isGhost(winner)){
@@ -678,7 +694,7 @@ __refRoot.GameReferee = class GameReferee {
       let doAdvance=!!advance;
       if(!protectedAlly&&doAdvance&&this.#piecesAt(this.#other(side),p.deadCell).length)doAdvance=false;
       if(protectedAlly&&doAdvance){const blockers=this.#piecesAt(side,p.ownCell).filter(x=>x.id!==winner.id);if(blockers.length)doAdvance=false;}
-      winner.coord=doAdvance?p.deadCell:p.ownCell;
+      winner.coord=doAdvance?p.deadCell:p.ownCell;const linkedShield=this.#linkedShieldFor(winner);if(linkedShield?.alive&&linkedShield.coord===p.ownCell)linkedShield.coord=winner.coord;
       if(protectedAlly&&protectedAlly.alive){
         const allyDest=doAdvance?p.ownCell:p.deadCell;
         const enemyBlock=this.#piecesAt(side,allyDest).some(x=>x.id!==winner.id);
@@ -733,7 +749,7 @@ __refRoot.GameReferee = class GameReferee {
     return JSON.stringify(this.#s,(k,v)=>v instanceof Set?{__set:[...v]}:v);
   }
   #importState(raw){
-    if(!raw)return;this.#s=JSON.parse(raw,(k,v)=>v&&typeof v==='object'&&Array.isArray(v.__set)?new Set(v.__set):v);if(!this.#s.doppelChoice)this.#s.doppelChoice={player:null,enemy:null};if(!this.#s.roundStarter)this.#s.roundStarter='player';if(!this.#s.roundActivations)this.#s.roundActivations={player:0,enemy:0};if(!this.#s.trees)this.#s.trees=[{coord:'C3',state:'live'},{coord:'F6',state:'live'}];if(!this.#s.traps)this.#s.traps={player:[],enemy:[]};if(!this.#s.spotReveals)this.#s.spotReveals={player:{},enemy:{}};if(!this.#s.combatMarks)this.#s.combatMarks={player:[],enemy:[]};if(!this.#s.combatHold)this.#s.combatHold={player:false,enemy:false};for(const side of ['player','enemy'])for(const p of this.#pieces(side)){if(!Array.isArray(p.effects))p.effects=[];if(p.bonusAH==null)p.bonusAH=0;if(p.turnsTaken==null)p.turnsTaken=0;}
+    if(!raw)return;this.#s=JSON.parse(raw,(k,v)=>v&&typeof v==='object'&&Array.isArray(v.__set)?new Set(v.__set):v);if(!this.#s.doppelChoice)this.#s.doppelChoice={player:null,enemy:null};if(!this.#s.roundStarter)this.#s.roundStarter='player';if(!this.#s.roundActivations)this.#s.roundActivations={player:0,enemy:0};if(!this.#s.trees)this.#s.trees=[{coord:'C3',state:'live'},{coord:'F6',state:'live'}];if(!this.#s.traps)this.#s.traps={player:[],enemy:[]};if(!this.#s.spotReveals)this.#s.spotReveals={player:{},enemy:{}};if(!this.#s.combatMarks)this.#s.combatMarks={player:[],enemy:[]};if(!this.#s.combatHold)this.#s.combatHold={player:false,enemy:false};if(this.#s.replayEvent===undefined)this.#s.replayEvent=null;for(const side of ['player','enemy'])for(const p of this.#pieces(side)){if(!Array.isArray(p.effects))p.effects=[];if(p.bonusAH==null)p.bonusAH=0;if(p.turnsTaken==null)p.turnsTaken=0;if(p.linkedToId===undefined)p.linkedToId=null;}
   }
 
 };

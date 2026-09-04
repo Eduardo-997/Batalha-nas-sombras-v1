@@ -214,8 +214,10 @@ function baseCoords(view){return new Set((view.bases||[]).map(b=>b.coord));}
 function enemyBases(view){return (view.bases||[]).filter(b=>b.owner!=='enemy'&&!b.sabotaged);}
 function canShare(view,p,c){
   if(isBlocked(c)||baseCoords(view).has(c))return false;
-  const ps=ownAt(view,c).filter(x=>x.id!==p.id);if(!ps.length)return true;if(ps.length>=2)return false;
-  return p.name==='Escudeiro'||ps.some(x=>x.name==='Escudeiro');
+  const ps=ownAt(view,c).filter(x=>x.id!==p.id),isLinker=x=>x?.name==='Escudeiro'||(x?.name==='Doppelgänger'&&x?.copied==='Escudeiro');
+  const follower=ownAlive(view).find(x=>x.linkedToId===p.id&&x.coord===p.coord);if(follower&&ps.length)return false;
+  if(!ps.length)return true;if(ps.length>=2)return false;
+  return isLinker(p)||ps.some(isLinker);
 }
 function knownEnemyAt(c){return memory.contacts[c]||null;}
 function enemyTypeFromContact(k){if(!k?.name)return null;return META[k.name]?.type||null;}
@@ -285,11 +287,11 @@ function bestPyroTargets(view,p){
 function bestSeerArea(view){
   const visSet=new Set((view.visibleOpponents||[]).map(e=>e.coord));let best=null;
   for(const main of CELLS){
-    const ns=neighbors(main,true);if(ns.length<3)continue;
-    const ranked=[...ns].sort((a,b)=>(heat(b)+(memory.contacts[b]?0.45:0)-(visSet.has(b)?1:0))-(heat(a)+(memory.contacts[a]?0.45:0)-(visSet.has(a)?1:0)));
-    const cells=[main,...ranked.slice(0,3)];let score=0;
+    const ns=neighbors(main,false);if(!ns.length)continue;
+    const second=[...ns].sort((a,b)=>(heat(b)+(memory.contacts[b]?0.45:0)-(visSet.has(b)?1:0))-(heat(a)+(memory.contacts[a]?0.45:0)-(visSet.has(a)?1:0)))[0];
+    if(!second)continue;const cells=[main,second];let score=0;
     for(const c of cells){score+=heat(c)*2.4;if(memory.contacts[c])score+=1.1;if(visSet.has(c))score-=2.5;}
-    const avgY=cells.reduce((n,c)=>n+rc(c).y,0)/4;score+=Math.max(0,(4.0-avgY))*0.12;
+    const avgY=cells.reduce((n,c)=>n+rc(c).y,0)/2;score+=Math.max(0,(4.0-avgY))*0.12;
     if(!best||score>best.score)best={cells,score};
   }
   return best;
@@ -372,13 +374,14 @@ function bestBardChoice(view,p){
 }
 function effectiveAbility(p){
   const name=p.name==='Doppelgänger'?p.copied:p.name;
-  if(name==='Vidente')return'seer';if(name==='Necromante')return'raise';if(name==='Mago do Espelho')return'mirror';
+  if(name==='Escudeiro')return'shieldLink';if(name==='Vidente')return'seer';if(name==='Necromante')return'raise';if(name==='Mago do Espelho')return'mirror';
   if(name==='Druida')return'awaken';if(name==='Sentinela')return'spotTrap';if(name==='Caçador')return'damageTrap';if(name==='Bardo')return'bard';
   return null;
 }
 function shouldUseAbility(view,p,a){
   const ab=effectiveAbility(p);if(!ab)return false;
   if(difficulty==='easy'&&Math.random()<diff().skipAbility)return false;
+  if(ab==='shieldLink'){if(p.linkedToId)return false;return ownAt(view,p.coord).some(x=>x.id!==p.id&&x.alive);}
   if(ab==='raise'){
     const skeletonAlive=ownAlive(view).some(x=>x.summonType==='skeleton');return !skeletonAlive&&legalRaiseCells(view,p).length>0;
   }
@@ -526,6 +529,7 @@ function decide(view,lastResult){
     if(targets.length&&heat(targets[0])>0.24)return {type:'pyroSelect',to:targets[0]};
     return {type:'pyroConfirm'};
   }
+  if(a.mode==='shieldLink'){const target=ownAt(view,p.coord).find(x=>x.id!==p.id&&x.alive);return target?{type:'shieldLink',targetPieceId:target.id}:{type:'end'};}
   if(a.mode==='seer'){
     const best=bestSeerArea(view);if(best){memory.abilityRound[p.id]=view.round;return {type:'seer',cells:best.cells};}
     return {type:'end'};

@@ -142,7 +142,7 @@
   function canMoveInto(state,p,activeSide,c,ps){
     const t=treeAt(state,c);if(t&&!(p.name==='Druida'&&t.state==='live'))return false;if(baseAtState(state,c))return false;
     const foes=ps.filter(x=>x.owner!==activeSide);if(foes.length)return true;
-    const own=ps.filter(x=>x.owner===activeSide&&x.id!==p.id);if(!own.length)return true;if(own.length>=2)return false;return p.name==='Escudeiro'||own.some(x=>x.name==='Escudeiro');
+    const own=ps.filter(x=>x.owner===activeSide&&x.id!==p.id),isLinker=x=>x?.name==='Escudeiro'||(x?.name==='Doppelgänger'&&x?.copied==='Escudeiro');const follower=ps.find(x=>x.owner===activeSide&&x.alive&&x.linkedToId===p.id);if(follower&&own.length)return false;if(!own.length)return true;if(own.length>=2)return false;return isLinker(p)||own.some(isLinker);
   }
 
   function paintGame(vs=views()){
@@ -161,7 +161,8 @@
         if(mode==='move'&&v.activation.moveRemaining>0&&R.neighbors(p.coord,p.diag).includes(c)&&canMoveInto(state,p,activeSide,c,ps))b.classList.add('highlight');
         if(mode==='attack'&&R.attackCells(p).includes(c))b.classList.add('attack-highlight');
         if(['raise','mirror','awaken','spotTrap','damageTrap','bard'].includes(mode)&&R.abilityCells(p).includes(c))b.classList.add('highlight');
-        if(mode==='seer'&&(!seer.length?R.abilityCells(p).includes(c):(c===seer[0]||R.neighbors(seer[0],true).includes(c))))b.classList.add('highlight');
+        if(mode==='seer'&&(!seer.length?R.abilityCells(p).includes(c):(c===seer[0]||R.neighbors(seer[0],false).includes(c))))b.classList.add('highlight');
+        if(mode==='shieldLink'&&c===p.coord)b.classList.add('highlight');
         if(mode==='pyro'&&R.abilityCells(p).includes(c))b.classList.add('attack-highlight');
         if(seer.includes(c)||pyro.includes(c))b.classList.add('pyro-selected');
       }
@@ -195,18 +196,20 @@
     else if(a.mode==='awaken')r=cl.awakenTree(c);
     else if(a.mode==='spotTrap'||a.mode==='damageTrap')r=cl.placeTrap(c);
     else if(a.mode==='bard'){const target=v.ownPieces.find(x=>x.id!==p.id&&x.alive&&x.coord===c&&R.man(p.coord,x.coord)<=p.ah);if(target){showBard(target);return;}setStatus('Escolha um aliado do mesmo lado dentro do Alc. Hab.');return;}
+    else if(a.mode==='shieldLink'){const target=v.ownPieces.find(x=>x.id!==p.id&&x.alive&&x.coord===p.coord);if(!target){setStatus('Escolha o aliado que está na mesma casa do Escudeiro.');return;}r=cl.shieldLink(target.id);}
     else{const base=baseAtView(v,c);if(base){showBase(base,v);return;}const hits=piecesAt(vs,c);if(hits.length>1)chooseStack(hits);else if(hits[0])switchSelect(hits[0]);return;}
     after(r);
   }
-  function seerClick(c){const p=activePiece(views());if(!seer.length){if(R.man(p.coord,c)>p.ah)return setStatus('Casa principal fora do Alc. Hab.');seer=[c];setStatus('Escolha mais 3 casas que toquem a principal.');render();return;}if(c===seer[0]){seer=[];render();return;}if(!R.neighbors(seer[0],true).includes(c))return setStatus('Essa casa não toca a principal.');if(seer.includes(c))seer=seer.filter(x=>x!==c);else if(seer.length<4)seer.push(c);setStatus(`${seer.length}/4 casas escolhidas.`);render();}
+  function seerClick(c){const p=activePiece(views());if(!seer.length){if(!R.abilityCells(p).includes(c))return setStatus('Casa principal fora do Alc. Hab.');seer=[c];setStatus('Agora escolha 1 casa ligada por lado à principal.');render();return;}if(c===seer[0]){seer=[];render();return;}if(!R.neighbors(seer[0],false).includes(c))return setStatus('A segunda casa precisa estar ligada por lado à principal.');seer=[seer[0],c];setStatus('2/2 casas escolhidas. Confirme a visão.');render();}
   function after(r,label=''){if(!r)return;if(r.ok){recorder.capture(label||r.status);replayBtn.classList.remove('hidden');}setStatus(r.status);render();}
 
   function handleChoices(vs){
     const pc=vs.player.pendingCombat?'player':vs.enemy.pendingCombat?'enemy':null,dc=vs.player.doppelChoice?'player':vs.enemy.doppelChoice?'enemy':null;
     if(pc){const can=vs[pc].pendingCombat.canAdvance;showPopup(`<b>⚔️ Confronto resolvido — Lado ${sideName(pc)}</b><div class="muted small" style="margin:5px 0 9px">Escolha onde o vencedor termina.</div><div class="row"><button data-stay>Posição original</button><button class="primary" data-advance ${can?'':'disabled'}>Posição derrotada</button></div>`);popup.querySelector('[data-stay]').onclick=()=>after(client(pc).chooseCombatPosition(false));const adv=popup.querySelector('[data-advance]');if(can)adv.onclick=()=>after(client(pc).chooseCombatPosition(true));return;}
     if(dc){const d=vs[dc].doppelChoice;showPopup(`<b>🎭 Doppelgänger — Lado ${sideName(dc)}</b><div class="muted small" style="margin:5px 0 9px">Manter ${d.current} ou copiar ${d.newAbility}?</div><div class="row"><button data-keep>Manter</button><button class="primary" data-copy>Copiar nova</button></div>`);popup.querySelector('[data-keep]').onclick=()=>after(client(dc).chooseDoppelCopy(false));popup.querySelector('[data-copy]').onclick=()=>after(client(dc).chooseDoppelCopy(true));return;}
+    if(activeSide&&vs[activeSide].activation?.mode==='shieldUnlink'){showPopup(`<b>🛡️ Desvincular Escudeiro?</b><div class="muted small" style="margin:5px 0 9px">Desvincular gastará o turno do Escudeiro.</div><div class="row"><button data-cancel>Cancelar</button><button class="primary" data-unlink>Desvincular</button></div>`);popup.querySelector('[data-cancel]').onclick=()=>after(client(activeSide).cancelMode());popup.querySelector('[data-unlink]').onclick=()=>after(client(activeSide).shieldLink(null));return;}
     if(activeSide&&vs[activeSide].activation?.mode==='pyro'){showPopup(`<b>🔥 Piromante</b><div class="muted small" style="margin:5px 0 9px">${pyro.length}/2 casas escolhidas.</div><div class="row"><button class="primary" data-confirm ${pyro.length?'':'disabled'}>Confirmar ataque</button><button data-cancel>Cancelar</button></div>`);if(pyro.length)popup.querySelector('[data-confirm]').onclick=()=>{const r=client(activeSide).confirmPyroAttack();pyro=[];after(r);};popup.querySelector('[data-cancel]').onclick=()=>{pyro=[];after(client(activeSide).cancelMode());};return;}
-    if(activeSide&&vs[activeSide].activation?.mode==='seer'){showPopup(`<b>👁️ Vidente</b><div class="muted small" style="margin:5px 0 9px">${seer.length}/4 casas escolhidas.</div><div class="row"><button class="primary" data-confirm ${seer.length===4?'':'disabled'}>Confirmar visão</button><button data-cancel>Cancelar</button></div>`);if(seer.length===4)popup.querySelector('[data-confirm]').onclick=()=>{const r=client(activeSide).useSeer(seer);seer=[];after(r);};popup.querySelector('[data-cancel]').onclick=()=>{seer=[];after(client(activeSide).cancelMode());};return;}
+    if(activeSide&&vs[activeSide].activation?.mode==='seer'){showPopup(`<b>👁️ Vidente</b><div class="muted small" style="margin:5px 0 9px">${seer.length}/2 casas escolhidas.</div><div class="row"><button class="primary" data-confirm ${seer.length===2?'':'disabled'}>Confirmar visão</button><button data-cancel>Cancelar</button></div>`);if(seer.length===2)popup.querySelector('[data-confirm]').onclick=()=>{const r=client(activeSide).useSeer(seer);seer=[];after(r);};popup.querySelector('[data-cancel]').onclick=()=>{seer=[];after(client(activeSide).cancelMode());};return;}
     hidePopup();
   }
   function showPopup(html){popup.innerHTML=html;popup.classList.remove('hidden');}
