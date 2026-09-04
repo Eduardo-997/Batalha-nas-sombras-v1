@@ -564,7 +564,7 @@ function decide(view,lastResult){
   if(shouldUseAbility(view,p,a))return {type:'startAbility'};
 
   // Movimento é usado para alcançar Postos, contatos e regiões ainda relevantes.
-  if(!a.movementUsed&&p.m>0)return {type:'startMove'};
+  if(!a.movementUsed&&p.m>0&&!p.linkedToId)return {type:'startMove'};
 
   // Depois de terminar o movimento, percepção pode ter criado um alvo provável.
   const afterMoveAttack=bestAttackTarget(view,p,{allowSpeculative:p.name==='Arqueiro'||p.name==='Fantasma'||a.lastPerception===true});

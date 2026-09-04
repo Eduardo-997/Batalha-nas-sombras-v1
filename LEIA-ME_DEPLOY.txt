@@ -1,4 +1,4 @@
-Batalha nas Sombras v1.15.24 — GIT + CLOUDFLARE
+Batalha nas Sombras v1.15.25 — HOTFIX GIT + CLOUDFLARE
 
 Suba/substitua os arquivos do projeto no repositório usado pelo Cloudflare.
 Os arquivos SAVE_PROJETO e TESTES são apenas documentação e não precisam ser enviados ao Git.

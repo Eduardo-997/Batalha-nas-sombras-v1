@@ -20,31 +20,32 @@ __refRoot.GameReferee = class GameReferee {
   createClient(side){
     if(side!=='player'&&side!=='enemy') throw new Error('lado inválido');
     const self=this;
+    const run=fn=>(...args)=>{self.#s.replayEvent=null;return fn(...args);};
     return Object.freeze({
       getView:()=>self.#getView(side),
-      selectPiece:(id)=>self.#selectPiece(side,id),
-      cancelSelection:()=>self.#cancelSelection(side),
-      cancelMode:()=>self.#cancelMode(side),
-      startMove:()=>self.#startMove(side),
-      moveStep:(to)=>self.#moveStep(side,to),
-      stopMove:()=>self.#stopMove(side),
-      startAttack:()=>self.#startAttack(side),
-      attack:(to)=>self.#attack(side,to),
-      selectPyroTarget:(to)=>self.#selectPyroTarget(side,to),
-      confirmPyroAttack:()=>self.#confirmPyroAttack(side),
-      startAbility:()=>self.#startAbility(side),
-      useSeer:(cells)=>self.#useSeer(side,cells),
-      raiseAt:(coord)=>self.#raiseAt(side,coord),
-      placeMirror:(coord)=>self.#placeMirror(side,coord),
-      awakenTree:(coord)=>self.#awakenTree(side,coord),
-      placeTrap:(coord)=>self.#placeTrap(side,coord),
-      bardBuff:(targetId,stat)=>self.#bardBuff(side,targetId,stat),
-      shieldLink:(targetId=null)=>self.#shieldLink(side,targetId),
-      endActivation:()=>self.#endActivationRequest(side),
-      chooseCombatPosition:(advance)=>self.#chooseCombatPosition(side,advance),
-      sabotageBase:(baseId,bonusId,targetPieceId=null)=>self.#sabotageBase(side,baseId,bonusId,targetPieceId),
-      chooseDoppelCopy:(copyNew)=>self.#chooseDoppelCopy(side,copyNew),
-      advanceTrainingRound:()=>self.#advanceTrainingRound()
+      selectPiece:run((id)=>self.#selectPiece(side,id)),
+      cancelSelection:run(()=>self.#cancelSelection(side)),
+      cancelMode:run(()=>self.#cancelMode(side)),
+      startMove:run(()=>self.#startMove(side)),
+      moveStep:run((to)=>self.#moveStep(side,to)),
+      stopMove:run(()=>self.#stopMove(side)),
+      startAttack:run(()=>self.#startAttack(side)),
+      attack:run((to)=>self.#attack(side,to)),
+      selectPyroTarget:run((to)=>self.#selectPyroTarget(side,to)),
+      confirmPyroAttack:run(()=>self.#confirmPyroAttack(side)),
+      startAbility:run(()=>self.#startAbility(side)),
+      useSeer:run((cells)=>self.#useSeer(side,cells)),
+      raiseAt:run((coord)=>self.#raiseAt(side,coord)),
+      placeMirror:run((coord)=>self.#placeMirror(side,coord)),
+      awakenTree:run((coord)=>self.#awakenTree(side,coord)),
+      placeTrap:run((coord)=>self.#placeTrap(side,coord)),
+      bardBuff:run((targetId,stat)=>self.#bardBuff(side,targetId,stat)),
+      shieldLink:run((targetId=null)=>self.#shieldLink(side,targetId)),
+      endActivation:run(()=>self.#endActivationRequest(side)),
+      chooseCombatPosition:run((advance)=>self.#chooseCombatPosition(side,advance)),
+      sabotageBase:run((baseId,bonusId,targetPieceId=null)=>self.#sabotageBase(side,baseId,bonusId,targetPieceId)),
+      chooseDoppelCopy:run((copyNew)=>self.#chooseDoppelCopy(side,copyNew)),
+      advanceTrainingRound:run(()=>self.#advanceTrainingRound())
     });
   }
 
@@ -237,7 +238,7 @@ __refRoot.GameReferee = class GameReferee {
   #shareTurnMate(p){if(!p)return null;if(p.name==='Druida')return this.#pieces(p.owner).find(x=>x.alive&&x.summonType==='livingBranch'&&x.druidId===p.id)||null;if(p.summonType==='livingBranch')return this.#rawPieceById(p.owner,p.druidId);return null;}
   #linkedShieldFor(p){if(!p)return null;return this.#pieces(p.owner).find(x=>x.alive&&x.linkedToId===p.id)||null;}
   #clearShieldLinks(p){if(!p)return;if(p.linkedToId)p.linkedToId=null;for(const q of this.#pieces(p.owner))if(q.linkedToId===p.id)q.linkedToId=null;}
-  #noteReplay(type,side,data={}){this.#s.replayEvent={type,side,round:this.#s.round,...structuredClone(data)};}
+  #noteReplay(type,side,data={}){const e={type,side,round:this.#s.round,...structuredClone(data)},cur=this.#s.replayEvent;if(!cur)this.#s.replayEvent=e;else if(cur.type==='sequence'&&Array.isArray(cur.events))cur.events.push(e);else this.#s.replayEvent={type:'sequence',side,round:this.#s.round,events:[cur,e]};}
   #spottedFor(viewer,p){const x=this.#s.spotReveals?.[viewer]?.[p.id];return !!x&&p.alive;}
   #siegeActive(){return this.#s.phase==='play'&&this.#s.bases.length>=4&&this.#s.bases.every(b=>b.sabotaged);}
   #siegeCells(){if(!this.#siegeActive())return [];const out=[];for(let y=0;y<8;y++)for(let x=0;x<8;x++)if(x===0||x===7||y===0||y===7)out.push(this.#R.coord(x,y));return out;}
@@ -580,6 +581,7 @@ __refRoot.GameReferee = class GameReferee {
   }
   #possess(side,ghost,target){
     if(!ghost?.alive||!target?.alive)return false;const targetSide=target.owner,coord=target.coord;
+    this.#clearShieldLinks(target);
     ghost.possession={hostSide:targetSide,hostId:target.id,hostSnapshot:structuredClone(target),ghostState:{name:'Fantasma',form:ghost.form||null,copied:ghost.copied||null,bonusM:ghost.bonusM||0,bonusV:ghost.bonusV||0,bonusA:ghost.bonusA||0,bonusRange:ghost.bonusRange||0,bonusAH:ghost.bonusAH||0,effects:structuredClone(ghost.effects||[])}};
     target.alive=false;target.possessedBy=ghost.id;target.coord=null;
     ghost.name=target.name;ghost.form=target.form||null;ghost.copied=target.copied||null;ghost.hp=target.hp;ghost.coord=coord;ghost.bonusM=target.bonusM||0;ghost.bonusV=target.bonusV||0;ghost.bonusA=target.bonusA||0;ghost.bonusRange=target.bonusRange||0;ghost.bonusAH=target.bonusAH||0;ghost.bonusRadarAdvanced=!!target.bonusRadarAdvanced;ghost.bonusRadarExpanded=!!target.bonusRadarExpanded;ghost.effects=structuredClone(target.effects||[]);
@@ -588,7 +590,7 @@ __refRoot.GameReferee = class GameReferee {
   }
   #breakPossession(ghost){
     const pos=ghost?.possession;if(!pos)return null;const coord=ghost.coord,target=this.#rawPieceById(pos.hostSide,pos.hostId);if(target){const snap=pos.hostSnapshot;Object.assign(target,snap);target.alive=true;target.possessedBy=null;target.coord=coord;target.hp=ghost.hp;target.form=ghost.form||null;target.copied=ghost.copied||null;target.bonusM=ghost.bonusM||0;target.bonusV=ghost.bonusV||0;target.bonusA=ghost.bonusA||0;target.bonusRange=ghost.bonusRange||0;target.bonusAH=ghost.bonusAH||0;target.effects=structuredClone(ghost.effects||[]);}
-    const gs=pos.ghostState;ghost.name='Fantasma';ghost.identity='Fantasma';ghost.form=gs.form;ghost.copied=gs.copied;ghost.bonusM=gs.bonusM;ghost.bonusV=gs.bonusV;ghost.bonusA=gs.bonusA;ghost.bonusRange=gs.bonusRange;ghost.bonusAH=gs.bonusAH;ghost.effects=gs.effects;ghost.possession=null;ghost.hp=0;ghost.alive=false;ghost.coord=coord;this.#createCorpse(ghost);this.#addHistory(ghost.owner,'☠️ Seu Fantasma foi expulso e morreu; o hospedeiro voltou ao dono original.');this.#addHistory(pos.hostSide,'👻 Sua peça foi recuperada após a morte do Fantasma.');return target;
+    const gs=pos.ghostState;ghost.name='Fantasma';ghost.identity='Fantasma';ghost.form=gs.form;ghost.copied=gs.copied;ghost.bonusM=gs.bonusM;ghost.bonusV=gs.bonusV;ghost.bonusA=gs.bonusA;ghost.bonusRange=gs.bonusRange;ghost.bonusAH=gs.bonusAH;ghost.effects=gs.effects;ghost.possession=null;ghost.hp=0;this.#clearShieldLinks(ghost);ghost.alive=false;ghost.coord=coord;this.#createCorpse(ghost);this.#addHistory(ghost.owner,'☠️ Seu Fantasma foi expulso e morreu; o hospedeiro voltou ao dono original.');this.#addHistory(pos.hostSide,'👻 Sua peça foi recuperada após a morte do Fantasma.');return target;
   }
 
   #sabotageBase(side,baseId,bonusId,targetPieceId=null){
@@ -607,9 +609,9 @@ __refRoot.GameReferee = class GameReferee {
   #kill(p,forceZombieFinal=false){
     if(!p||!p.alive)return;
     if(p.possession){this.#breakPossession(p);return;}
-    if(p.name==='Zumbi'&&p.original&&!p.zombieRevived&&!forceZombieFinal){p.alive=false;p.zombiePending=true;p.zombieReviveRound=this.#s.round+1;p.zombieDeathCoord=p.coord;p.zombieFinal=false;this.#addHistory(p.owner,'🧟 Zumbi caiu, mas ainda não conta como eliminação. Ele tentará se levantar na próxima rodada.');return;}
+    if(p.name==='Zumbi'&&p.original&&!p.zombieRevived&&!forceZombieFinal){this.#clearShieldLinks(p);p.alive=false;p.zombiePending=true;p.zombieReviveRound=this.#s.round+1;p.zombieDeathCoord=p.coord;p.zombieFinal=false;this.#addHistory(p.owner,'🧟 Zumbi caiu, mas ainda não conta como eliminação. Ele tentará se levantar na próxima rodada.');return;}
     if(p.summonType==='livingBranch'){
-      p.alive=false;this.#s.trees.push({coord:p.coord,state:'dead'});this.#addHistory(p.owner,'🌲 Galho-Vivo caiu e virou uma árvore morta.');return;
+      this.#clearShieldLinks(p);p.alive=false;this.#s.trees.push({coord:p.coord,state:'dead'});this.#addHistory(p.owner,'🌲 Galho-Vivo caiu e virou uma árvore morta.');return;
     }
     this.#clearShieldLinks(p);p.alive=false;if(p.name==='Zumbi')p.zombieFinal=true;
     if(p.name==='Druida')this.#collapseDruidBranches(p);
@@ -618,7 +620,7 @@ __refRoot.GameReferee = class GameReferee {
     if(p.summonType==='miniSlime'&&p.slimeLineageId&&!this.#slimeLineageAlive(p.owner,p.slimeLineageId)){this.#addHistory(p.owner,'☠️ O último Mini-Slime caiu. A linhagem do Slime foi eliminada e agora conta como 1 perda.');this.#addHistory(this.#other(p.owner),'☠️ Uma eliminação inimiga foi confirmada.');}
     if(p.name==='Kamikaze'&&p.original)this.#explodeKamikaze(p);
   }
-  #collapseDruidBranches(druid){for(const b of this.#pieces(druid.owner).filter(x=>x.alive&&x.summonType==='livingBranch'&&x.druidId===druid.id)){const c=b.coord;b.alive=false;this.#s.trees.push({coord:c,state:'live'});this.#addHistory(druid.owner,'🌳 Com a morte do Druida, Galho-Vivo voltou a ser uma árvore normal.');}}
+  #collapseDruidBranches(druid){for(const b of this.#pieces(druid.owner).filter(x=>x.alive&&x.summonType==='livingBranch'&&x.druidId===druid.id)){const c=b.coord;this.#clearShieldLinks(b);b.alive=false;this.#s.trees.push({coord:c,state:'live'});this.#addHistory(druid.owner,'🌳 Com a morte do Druida, Galho-Vivo voltou a ser uma árvore normal.');}}
   #clearBardEffects(bardId,side){for(const q of this.#pieces(side)){const removed=(q.effects||[]).filter(e=>e.sourceBardId===bardId),temp=removed.reduce((n,e)=>n+Math.max(0,Number(e.tempLife)||0),0);q.effects=(q.effects||[]).filter(e=>e.sourceBardId!==bardId);if(temp&&q.alive)q.hp=Math.max(1,q.hp-temp);const max=this.#R.defOf(q).v;if(q.hp>max)q.hp=max;}}
   #processZombieRevives(){for(const side of ['player','enemy'])for(const p of this.#pieces(side)){if(!p.zombiePending||p.zombieReviveRound>this.#s.round)continue;const free=c=>c&&!this.#treeAt(c)&&!this.#baseAt(c)&&!this.#pieceAt('player',c)&&!this.#pieceAt('enemy',c);let c=free(p.zombieDeathCoord)?p.zombieDeathCoord:this.#R.neighbors(p.zombieDeathCoord,false).find(free);if(!c)continue;p.coord=c;p.hp=1;p.alive=true;p.zombiePending=false;p.zombieRevived=true;p.zombieTurnsLeft=3;p.activated=false;this.#addHistory(side,`🧟 Zumbi se levantou em ${c} com 1 Vida e terá 3 turnos antes de cair definitivamente.`);}}
   #expireBardAfterTurn(bard){bard.turnsTaken=(bard.turnsTaken||0)+1;for(const q of this.#pieces(bard.owner)){const expired=(q.effects||[]).filter(e=>e.sourceBardId===bard.id&&bard.turnsTaken>=(e.expireAfterSourceTurn||Infinity));if(!expired.length)continue;const temp=expired.reduce((n,e)=>n+Math.max(0,Number(e.tempLife)||0),0);q.effects=(q.effects||[]).filter(e=>!expired.includes(e));if(temp&&q.alive)q.hp=Math.max(1,q.hp-temp);const max=this.#R.defOf(q).v;if(q.hp>max)q.hp=max;this.#addHistory(bard.owner,`🎵 A Inspiração em ${this.#R.defOf(q).name} terminou.`);}}
@@ -715,7 +717,7 @@ __refRoot.GameReferee = class GameReferee {
       if(Number(e.remaining)>0){keep.push(e);continue;}
       this.#addHistory(p.owner,`⏳ ${e.name||'Um efeito temporário'} terminou em ${this.#R.defOf(p).name}.`);
       if(e.onExpire==='despawn'&&p.alive){
-        p.alive=false;
+        this.#clearShieldLinks(p);p.alive=false;
         this.#addHistory(p.owner,`⌛ ${this.#R.defOf(p).name} deixou o campo ao fim da duração.`);
         this.#addHistory(this.#other(p.owner),'⌛ Uma presença temporária inimiga deixou o campo.');
       }
