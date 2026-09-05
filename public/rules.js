@@ -2,25 +2,25 @@
 var __gameRoot = typeof window!=='undefined' ? window : globalThis;
 __gameRoot.GameRules = (() => {
   const defs = [
-    {name:'Arqueiro',icon:'🏹',type:'S',typeIcon:'🗡️',v:1,m:0,a:1,range:99,per:1,ah:0},
+    {name:'Arqueiro',icon:'🏹',type:'S',typeIcon:'🗡️',v:1,m:1,a:1,range:3,per:1,ah:0},
     {name:'Ninja',icon:'🗡️',type:'S',typeIcon:'🗡️',v:1,m:2,a:1,range:2,per:1,ah:0},
     {name:'Piromante',icon:'🔥',type:'S',typeIcon:'🗡️',v:1,m:1,a:1,range:1,per:1,ah:1},
     {name:'Kamikaze',icon:'💣',type:'S',typeIcon:'🗡️',v:1,m:1,a:0,range:1,per:1,ah:1},
     {name:'Caçador',icon:'🐾',type:'S',typeIcon:'🗡️',v:1,m:1,a:1,range:1,per:1,ah:1},
-    {name:'Paranoia',icon:'🧠',type:'S',typeIcon:'🗡️',v:1,m:1,a:1,range:1,per:1,ah:0},
+    {name:'Paranoia',icon:'🧠',type:'S',typeIcon:'🗡️',v:1,m:1,a:1,range:1,per:2,ah:0},
     {name:'Escudeiro',icon:'🛡️',type:'R',typeIcon:'🛡️',v:2,m:1,a:0,range:1,per:1,ah:0},
     {name:'Golem',icon:'🗿',type:'R',typeIcon:'🛡️',v:2,m:1,a:0,range:1,per:1,ah:0},
     {name:'Cavaleiro',icon:'🐎',type:'R',typeIcon:'🛡️',v:1,m:3,a:1,range:1,per:1,ah:0},
     {name:'Slime',icon:'🟢',type:'R',typeIcon:'🛡️',v:1,m:1,a:0,range:1,per:1,ah:0},
     {name:'Zumbi',icon:'🧟',type:'R',typeIcon:'🛡️',v:2,m:1,a:1,range:1,per:1,ah:0},
-    {name:'Druida',icon:'🌿',type:'R',typeIcon:'🛡️',v:1,m:1,a:0,range:1,per:1,ah:1},
+    {name:'Druida',icon:'🌿',type:'R',typeIcon:'🛡️',v:1,m:1,a:1,range:1,per:1,ah:1},
     {name:'Vidente',icon:'👁️',type:'P',typeIcon:'📜',v:1,m:1,a:0,range:1,per:1,ah:3},
     {name:'Mago do Espelho',icon:'🔮',type:'P',typeIcon:'📜',v:1,m:1,a:0,range:1,per:1,ah:2},
     {name:'Necromante',icon:'☠️',type:'P',typeIcon:'📜',v:1,m:1,a:1,range:1,per:1,ah:1},
-    {name:'Doppelgänger',icon:'🎭',type:'P',typeIcon:'📜',v:1,m:1,a:1,range:1,per:1,ah:1},
+    {name:'Doppelgänger',icon:'🎭',type:'P',typeIcon:'📜',v:1,m:1,a:1,range:1,per:1,ah:2},
     {name:'Sentinela',icon:'🦉',type:'P',typeIcon:'📜',v:1,m:2,a:0,range:1,per:1,ah:1},
     {name:'Bardo',icon:'🎵',type:'P',typeIcon:'📜',v:1,m:1,a:0,range:1,per:1,ah:2},
-    {name:'Coringa',icon:'🃏',type:'J',typeIcon:'🃏',v:1,m:1,a:0,range:1,per:1,ah:0,diag:true},
+    {name:'Trapaceiro',icon:'🃏',type:'J',typeIcon:'🃏',v:1,m:1,a:0,range:1,per:1,ah:0,diag:true},
     {name:'Fantasma',icon:'👻',type:'J',typeIcon:'🃏',v:1,m:1,a:0,range:1,per:1,ah:0}
   ];
   const skeletonDef={name:'Esqueleto',icon:'💀',type:'C',typeIcon:'🦴',v:1,m:1,a:1,range:1,per:1,ah:0};
@@ -28,6 +28,7 @@ __gameRoot.GameRules = (() => {
   const lavaDef={name:'Golem de Lava',icon:'🌋',type:'R',typeIcon:'🛡️',v:1,m:0,a:1,range:1,per:1,ah:0};
   const branchDef={name:'Galho-Vivo',icon:'🌲',type:'C',typeIcon:'🦴',v:1,m:1,a:1,range:1,per:1,ah:0};
   const byName = Object.fromEntries(defs.map(d=>[d.name,d]));
+  byName.Coringa=byName.Trapaceiro; // compatibilidade com saves/clientes antigos
   const archetypeNames=Object.freeze({R:'Vanguarda',P:'Estrategista',S:'Executor',J:'Coringa',C:'Condenado'});
   const archetypeName=type=>archetypeNames[type]||type||'—';
   const baseBonuses=[
@@ -44,8 +45,15 @@ __gameRoot.GameRules = (() => {
   const inside=(x,y)=>x>=0&&x<8&&y>=0&&y<8;
   const man=(a,b)=>{const A=rc(a),B=rc(b);return Math.abs(A.x-B.x)+Math.abs(A.y-B.y)};
   const sameLine=(a,b)=>{const A=rc(a),B=rc(b);return A.x===B.x||A.y===B.y};
-  const blockedCells=Object.freeze(['C3','F6']);
+  const treeCells=Object.freeze(['B3','G6']);
+  const rockCells=Object.freeze(['F2','C7']);
+  const waterCells=Object.freeze(['D3','E6']);
+  const swampCells=Object.freeze(['C5','F4']);
+  const blockedCells=Object.freeze([...treeCells,...rockCells]);
   const isBlocked=c=>blockedCells.includes(c);
+  const isRock=c=>rockCells.includes(c);
+  const isWater=c=>waterCells.includes(c);
+  const isSwamp=c=>swampCells.includes(c);
   function neighbors(c,diag=false){
     const a=rc(c),ds=diag?[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]:[[1,0],[-1,0],[0,1],[0,-1]];
     return ds.map(([dx,dy])=>[a.x+dx,a.y+dy]).filter(([x,y])=>inside(x,y)).map(([x,y])=>coord(x,y));
@@ -63,11 +71,14 @@ __gameRoot.GameRules = (() => {
       acc.v+=(Number(m.v)||0);acc.m+=(Number(m.m)||0);acc.a+=(Number(m.a)||0);acc.range+=(Number(m.range)||0);acc.per+=(Number(m.per)||0);acc.ah+=(Number(m.ah)||0);
       return acc;
     },{v:0,m:0,a:0,range:0,per:0,ah:0});
+    const absorb=p.golemAbsorbStat||null;
+    const rawV=Math.max(1,(base.v||0)+(p.bonusV||0)+temp.v+(absorb==='life'?1:0));
+    const rawM=Math.max(0,(base.m||0)+(p.bonusM||0)+temp.m+(absorb==='move'?1:0));
+    const rawA=Math.max(0,(base.a||0)+(p.bonusA||0)+temp.a+(absorb==='attack'?1:0));
+    let rawRange=Math.max(0,(base.range||0)+(p.bonusRange||0)+temp.range);
+    if((p.name==='Arqueiro'||p.identity==='Arqueiro')&&p.sureShotActive)rawRange*=2;
     return {...base,
-      v:Math.max(1,(base.v||0)+(p.bonusV||0)+temp.v),
-      m:Math.max(0,(base.m||0)+(p.bonusM||0)+temp.m),
-      a:Math.max(0,(base.a||0)+(p.bonusA||0)+temp.a),
-      range:Math.max(0,(base.range||0)+(p.bonusRange||0)+temp.range),
+      v:rawV,m:rawM,a:rawA,range:rawRange,
       per:Math.max(0,(base.per??1)+(p.bonusPer||0)+temp.per),
       ah:Math.max(0,(base.ah||0)+(p.bonusAH||0)+temp.ah)
     };
@@ -117,7 +128,7 @@ __gameRoot.GameRules = (() => {
     if(A===D)return'tie';
     return((A==='R'&&D==='S')||(A==='S'&&D==='P')||(A==='P'&&D==='R'))?'att':'def';
   }
-  return Object.freeze({defs,skeletonDef,miniDef,lavaDef,branchDef,baseBonuses,byName,archetypeNames,archetypeName,rc,coord,inside,man,sameLine,blockedCells,isBlocked,neighbors,perceptionCells,defOf,attackCells,abilityCells,blastCells,directWinner});
+  return Object.freeze({defs,skeletonDef,miniDef,lavaDef,branchDef,baseBonuses,byName,archetypeNames,archetypeName,rc,coord,inside,man,sameLine,treeCells,rockCells,waterCells,swampCells,blockedCells,isBlocked,isRock,isWater,isSwamp,neighbors,perceptionCells,defOf,attackCells,abilityCells,blastCells,directWinner});
 })();
 
 if(typeof module!=='undefined'&&module.exports) module.exports=__gameRoot.GameRules;

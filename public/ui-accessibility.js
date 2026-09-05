@@ -20,10 +20,4 @@
     el.setAttribute('role','button'); el.setAttribute('tabindex','0');
     el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();el.click();}});
   }
-
-  // v1.15.26 — hotfix mobile: os controles não podem ficar presos sobre o tabuleiro.
-  const mobileControlsFix=document.createElement('style');
-  mobileControlsFix.id='v11526-mobile-controls-fix';
-  mobileControlsFix.textContent='@media(max-width:980px){.controls{position:static!important;bottom:auto!important;z-index:auto!important;backdrop-filter:none!important}}';
-  document.head.appendChild(mobileControlsFix);
 })();

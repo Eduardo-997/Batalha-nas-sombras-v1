@@ -29,7 +29,8 @@ function perceptionCells(c,per=1,diag=false){
 }
 function allCells(){const a=[];for(let y=0;y<8;y++)for(let x=0;x<8;x++)a.push(coord(x,y));return a;}
 const CELLS=allCells();
-const BLOCKED=new Set(['C3','F6']);
+const BLOCKED=new Set(['B3','G6','F2','C7']);
+const SWAMPS=new Set(['C5','F4']);
 const isBlocked=c=>BLOCKED.has(c);
 function attackCells(p){
   if(((p.a||0)<=0&&p.name!=='Fantasma')||(p.range||0)<=0)return [];
@@ -77,7 +78,7 @@ const META={
   'Doppelgänger':{type:'P',role:'trickster'},
   'Sentinela':{type:'P',role:'trapper'},
   'Bardo':{type:'P',role:'support'},
-  'Coringa':{type:'J',role:'hunter'},
+  'Trapaceiro':{type:'J',role:'hunter'},
   'Fantasma':{type:'J',role:'assassin'},
   'Esqueleto':{type:'C',role:'fighter'}
 };
@@ -297,8 +298,8 @@ function bestSeerArea(view){
   return best;
 }
 function legalRaiseCells(view,p){
-  const ownSet=ownCoords(view),corpses=new Set((view.corpses||[]).map(c=>c.coord));
-  return neighbors(p.coord,false).filter(c=>corpses.has(c)&&!ownSet.has(c));
+  const ownSet=ownCoords(view),corpses=new Set((view.corpses||[]).map(c=>c.coord)),solid=new Set([...(view.trees||[]).map(t=>t.coord),...(view.rocks||[])]);
+  return neighbors(p.coord,false).filter(c=>corpses.has(c)&&!ownSet.has(c)&&!solid.has(c));
 }
 function bestRaiseCell(view,p){
   const cells=legalRaiseCells(view,p);if(!cells.length)return null;
@@ -306,11 +307,11 @@ function bestRaiseCell(view,p){
   return b?.item||cells[0];
 }
 function mirrorCandidates(view,p){
-  const ownSet=ownCoords(view),bases=baseCoords(view),mirrors=new Set((view.ownMirrors||[]).map(m=>m.coord));
+  const ownSet=ownCoords(view),bases=baseCoords(view),mirrors=new Set((view.ownMirrors||[]).map(m=>m.coord)),solid=new Set([...(view.trees||[]).map(t=>t.coord),...(view.rocks||[])]);
   const out=[];const q=rc(p.coord);
   for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]])for(let s=1;s<=2;s++){
     const x=q.x+dx*s,y=q.y+dy*s;if(!inside(x,y))continue;const c=coord(x,y);
-    if(isBlocked(c)||ownSet.has(c)||bases.has(c)||mirrors.has(c))continue;
+    if(solid.has(c)||ownSet.has(c)||bases.has(c)||mirrors.has(c))continue;
     if((memory.failedCells[c]||0)>=view.round)continue;out.push(c);
   }
   return out;
@@ -337,8 +338,8 @@ function bestAwakenCell(view,p){
   return b?.item?.coord||null;
 }
 function trapCandidates(view,p){
-  const bases=baseCoords(view),trees=new Set((view.trees||[]).map(t=>t.coord));
-  return abilityCells(p).filter(c=>!bases.has(c)&&!trees.has(c)&&(memory.failedCells[c]||0)<view.round);
+  const bases=baseCoords(view),solid=new Set([...(view.trees||[]).map(t=>t.coord),...(view.rocks||[])]);
+  return abilityCells(p).filter(c=>!bases.has(c)&&!solid.has(c)&&(memory.failedCells[c]||0)<view.round);
 }
 function bestTrapCell(view,p){
   const cells=trapCandidates(view,p);if(!cells.length)return null;
@@ -354,7 +355,7 @@ function bestTrapCell(view,p){
 }
 function bardStatScore(target,stat){
   const role=metaOf(target).role;let s=0;
-  if(stat==='attack')s=(target.a<=0?4:14)+(role==='hunter'||role==='assassin'||role==='bruiser'?8:0)+(target.name==='Coringa'?8:0)-(target.name==='Kamikaze'?10:0);
+  if(stat==='attack')s=(target.a<=0?4:14)+(role==='hunter'||role==='assassin'||role==='bruiser'?8:0)+(target.name==='Trapaceiro'?8:0)-(target.name==='Kamikaze'?10:0);
   if(stat==='range')s=target.a>0&&target.range<8?12+(target.name==='Ninja'?8:0)+(target.name==='Caçador'?3:0):-999;
   if(stat==='abilityRange')s=(target.ah||0)>0?14+(['Vidente','Bardo','Druida','Caçador','Sentinela','Necromante','Mago do Espelho'].includes(target.name)?8:0):-999;
   if(stat==='move')s=10+(target.m===0?16:0)+(role==='hunter'||role==='scout'||role==='trapper'?6:0);
@@ -374,14 +375,18 @@ function bestBardChoice(view,p){
 }
 function effectiveAbility(p){
   const name=p.name==='Doppelgänger'?p.copied:p.name;
-  if(name==='Escudeiro')return'shieldLink';if(name==='Vidente')return'seer';if(name==='Necromante')return'raise';if(name==='Mago do Espelho')return'mirror';
+  if(name==='Ninja')return'smoke';if(name==='Kamikaze')return'kamikaze';if(name==='Escudeiro')return'shieldLink';if(name==='Vidente')return'seer';if(name==='Necromante')return'raise';if(name==='Mago do Espelho')return'mirror';
   if(name==='Druida')return'awaken';if(name==='Sentinela')return'spotTrap';if(name==='Caçador')return'damageTrap';if(name==='Bardo')return'bard';
   return null;
 }
 function shouldUseAbility(view,p,a){
+  if(p.name==='Arqueiro')return (p.sureShotCooldown||0)<=0&&!!bestAttackTarget(view,{...p,range:(p.range||3)*2},{allowSpeculative:true});
+  if(p.name==='Golem'&&!p.form)return (view.rocks||[]).some(c=>man(p.coord,c)===1);
   const ab=effectiveAbility(p);if(!ab)return false;
   if(difficulty==='easy'&&Math.random()<diff().skipAbility)return false;
-  if(ab==='shieldLink'){if(p.linkedToId)return false;return ownAt(view,p.coord).some(x=>x.id!==p.id&&x.alive);}
+  if(ab==='smoke'){if((p.ninjaSmokeCooldown||0)>0)return false;const danger=(view.visibleOpponents||[]).some(e=>cheb(p.coord,e.coord)<=2)||neighbors(p.coord,true).some(c=>heat(c)>.75);return danger;}
+  if(ab==='kamikaze'){const ah=Math.max(1,p.ah||1);return (view.visibleOpponents||[]).some(e=>cheb(p.coord,e.coord)<=ah);}
+  if(ab==='shieldLink'){if(p.linkedToId)return false;const ah=p.ah||0;return ownAlive(view).some(x=>x.id!==p.id&&x.alive&&man(p.coord,x.coord)<=ah&&((ownAt(view,x.coord)||[]).length<2||x.coord===p.coord));}
   if(ab==='raise'){
     const skeletonAlive=ownAlive(view).some(x=>x.summonType==='skeleton');return !skeletonAlive&&legalRaiseCells(view,p).length>0;
   }
@@ -427,7 +432,7 @@ function bestObjective(view,p){
 }
 function movementStep(view,p,a){
   if(a.moveRemaining<=0)return {type:'stopMove'};
-  const opts=neighbors(p.coord,!!p.diag).filter(c=>canShare(view,p,c));
+  const opts=neighbors(p.coord,!!p.diag).filter(c=>canShare(view,p,c)&&((SWAMPS.has(c)?2:1)<=a.moveRemaining));
   if(!opts.length)return {type:'stopMove'};
   // Se já alcançou um Posto ou uma boa oportunidade de tiro, não desperdiça passos.
   if((a.stepsTaken||0)>0){
@@ -441,9 +446,9 @@ function movementStep(view,p,a){
     if(objective)s+=(man(p.coord,objective.coord)-man(c,objective.coord))*8+objective.score*0.05;
     s+=directMoveRisk(p,c);
     // Não encosta inutilmente em nossas próprias bordas; favorece avanço e centro.
-    const q=rc(c);s+=(7-q.y)*0.34;s+=(3.5-Math.abs(q.x-3.5))*0.18;
+    const q=rc(c);s+=(7-q.y)*0.34;s+=(3.5-Math.abs(q.x-3.5))*0.18;s-=SWAMPS.has(c)?1.2:0;
     // Caçadores aceitam mais risco, suportes preferem não pisar em casa muito suspeita.
-    const role=metaOf(p).role;if(heat(c)>0.65)s+=((role==='hunter'||role==='assassin'||role==='bruiser'||p.name==='Coringa')?5:-4)*heat(c);
+    const role=metaOf(p).role;if(heat(c)>0.65)s+=((role==='hunter'||role==='assassin'||role==='bruiser'||p.name==='Trapaceiro')?5:-4)*heat(c);
     if(difficulty==='extreme'){
       const k=knownEnemyAt(c);if(k){const r=directResult(metaOf(p).type,enemyTypeFromContact(k));s+=r>0?9:r<0?-12:-3;}
       if(role==='support'||role==='seer')s-=heat(c)*3;
@@ -457,13 +462,13 @@ function bonusTargetScore(view,bonus,p){
   const role=metaOf(p).role;let s=0;
   if(bonus==='radarAdvanced'||bonus==='radarExpanded'){
     if((bonus==='radarAdvanced'&&p.radarAdvanced)||(bonus==='radarExpanded'&&p.radarExpanded))return -999;
-    s=(p.m||0)*3+(p.per||1)*4+(role==='hunter'?8:0)+(p.name==='Coringa'?5:0);
+    s=(p.m||0)*3+(p.per||1)*4+(role==='hunter'?8:0)+(p.name==='Trapaceiro'?5:0);
   } else if(bonus==='move'){
     s=(p.m===0?28:8)+(role==='hunter'?10:0)+(p.name==='Golem'||p.displayName==='Golem de Lava'?7:0);
   } else if(bonus==='life'){
-    s=(p.maxHp<=1?16:8)+(p.hp<p.maxHp?8:0)+(p.name==='Coringa'||p.name==='Arqueiro'||p.name==='Vidente'?7:0)-(p.name==='Kamikaze'?8:0);
+    s=(p.maxHp<=1?16:8)+(p.hp<p.maxHp?8:0)+(p.name==='Trapaceiro'||p.name==='Arqueiro'||p.name==='Vidente'?7:0)-(p.name==='Kamikaze'?8:0);
   } else if(bonus==='attack'){
-    s=(p.a===0?16:12)+(p.m||0)*2+(role==='hunter'?8:0)+(p.name==='Coringa'?12:0)+(p.name==='Kamikaze'?-10:0);
+    s=(p.a===0?16:12)+(p.m||0)*2+(role==='hunter'?8:0)+(p.name==='Trapaceiro'?12:0)+(p.name==='Kamikaze'?-10:0);
   } else if(bonus==='range'){
     if(p.a<=0||p.range>=8)return -999;s=15+(p.name==='Ninja'?10:0)+(p.name==='Piromante'?5:0)+(p.m||0);
   } else if(bonus==='abilityRange'){
@@ -491,7 +496,7 @@ function pieceSelectionScore(view,p){
     const ab=effectiveAbility(p);s+=ab==='raise'?72:ab==='seer'?58:ab==='bard'?62:ab==='awaken'?54:(ab==='spotTrap'||ab==='damageTrap')?48:38;
   }
   const obj=bestObjective(view,p);if(obj&&p.m>0)s+=Math.max(0,32-man(p.coord,obj.coord)*3)+(p.m*2);
-  if(p.name==='Coringa'||p.name==='Fantasma')s+=8;if(p.name==='Cavaleiro'||p.name==='Ninja'||p.name==='Paranoia')s+=5;
+  if(p.name==='Trapaceiro'||p.name==='Fantasma')s+=8;if(p.name==='Cavaleiro'||p.name==='Ninja'||p.name==='Paranoia')s+=5;
   if(p.name==='Zumbi'&&p.zombieRevived)s+=7;
   if(p.name==='Arqueiro'&&!atk)s-=8;
   return s;
@@ -529,7 +534,9 @@ function decide(view,lastResult){
     if(targets.length&&heat(targets[0])>0.24)return {type:'pyroSelect',to:targets[0]};
     return {type:'pyroConfirm'};
   }
-  if(a.mode==='shieldLink'){const target=ownAt(view,p.coord).find(x=>x.id!==p.id&&x.alive);return target?{type:'shieldLink',targetPieceId:target.id}:{type:'end'};}
+  if(a.mode==='kamikaze')return {type:'kamikazeConfirm'};
+  if(a.mode==='absorbRock'){const rocks=(view.rocks||[]).filter(c=>man(p.coord,c)===1);if(!rocks.length)return {type:'end'};let stat='attack';if((p.hp||1)<(p.maxHp||2)&&p.golemAbsorbStat!=='life')stat='life';else if(p.golemAbsorbStat==='attack')stat='move';return {type:'absorbRock',coord:rocks[0],stat};}
+  if(a.mode==='shieldLink'){const ah=p.ah||0,target=pickBest(ownAlive(view).filter(x=>x.id!==p.id&&x.alive&&man(p.coord,x.coord)<=ah&&((ownAt(view,x.coord)||[]).length<2||x.coord===p.coord)),x=>metaOf(x).role==='support'?7:metaOf(x).role==='seer'?6:4)?.item;return target?{type:'shieldLink',targetPieceId:target.id}:{type:'end'};}
   if(a.mode==='seer'){
     const best=bestSeerArea(view);if(best){memory.abilityRound[p.id]=view.round;return {type:'seer',cells:best.cells};}
     return {type:'end'};
