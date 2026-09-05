@@ -1,12 +1,11 @@
-Batalha nas Sombras v1.15.25 — HOTFIX GIT + CLOUDFLARE
+Batalha nas Sombras v1.15.37 — TESTE GIT
 
-Suba/substitua os arquivos do projeto no repositório usado pelo Cloudflare.
-Os arquivos SAVE_PROJETO e TESTES são apenas documentação e não precisam ser enviados ao Git.
-O wrangler.jsonc foi preservado para manter o mesmo Worker/Durable Objects.
+Base: v1.15.34 TESTE GIT.
 
-Mudanças principais desta versão:
-- Vidente: 2 casas ligadas, com marcação por Alc. Hab.
-- Escudeiro: Vincular / Desvincular e acompanhamento automático do aliado.
-- cadáver de morte por armadilha fica na casa da armadilha.
-- Replay mostra eventos relevantes do quadro com mais clareza.
-- Ninja permanece com o emote atual 🗡️.
+Principais mudanças:
+- Arena: uma única régua externa A–H / 1–8, sem repetir coordenadas por setor.
+- Personagem Coringa renomeado para Trapaceiro; o arquétipo Coringa mantém o mesmo nome e regras.
+- Compatibilidade mantida com saves/replays antigos que ainda tragam o nome Coringa.
+- Checkup geral de sintaxe, assets, versões, definições de personagens, regras principais e consistência Clássico/Online/Arena.
+
+Observação de deploy: arquivos SAVE_PROJETO, TESTES e VALIDACAO são documentação de desenvolvimento e não são necessários para o jogo funcionar no Git/Cloudflare.
