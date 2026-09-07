@@ -369,19 +369,19 @@ button:not(:disabled):active,a.mode-btn:active,a.toplink:active,.btn:active{tran
 
 /* v1.15.29 — pacote visual com artes dos personagens, terreno, estruturas e marcadores. */
 .roster-icon{width:42px;height:42px;flex:0 0 42px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;overflow:hidden;background:#0d0e0f;border:1px solid rgba(190,148,82,.30)}
-.roster-icon .roster-art{width:100%;height:100%;object-fit:cover;display:block}
+.roster-icon .roster-art{width:100%;height:100%;object-fit:contain;object-position:center center;display:block;background:#090a0b}
 .roster-type{display:inline-flex;align-items:center;justify-content:center}
-.archetype-art{width:22px;height:22px;object-fit:cover;border-radius:5px;border:1px solid rgba(195,154,85,.26)}
+.archetype-art{width:22px;height:22px;object-fit:contain;object-position:center center;border-radius:5px;border:1px solid rgba(195,154,85,.26);background:#090a0b}
 .piece-token.art-token{overflow:hidden;padding:0;background:#0c0d0e}
-.piece-token .piece-art{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
-.scenery-art{position:absolute;z-index:1;inset:3px;width:calc(100% - 6px);height:calc(100% - 6px);object-fit:cover;border-radius:8px;opacity:.92;pointer-events:none;filter:drop-shadow(0 3px 2px rgba(0,0,0,.48))}
+.piece-token .piece-art{width:100%;height:100%;object-fit:contain;object-position:center center;display:block;border-radius:50%;background:#090a0b}
+.scenery-art{position:absolute;z-index:1;inset:3px;width:calc(100% - 6px);height:calc(100% - 6px);object-fit:contain;object-position:center center;border-radius:8px;opacity:.92;pointer-events:none;background:#090a0b;filter:drop-shadow(0 3px 2px rgba(0,0,0,.48))}
 .terrain-water .scenery-art,.terrain-swamp .scenery-art{opacity:.78}
-.base-art{position:relative;z-index:2;width:42px;height:42px;object-fit:cover;border-radius:8px;filter:drop-shadow(0 2px 2px #000);pointer-events:none}
-.marker-art{width:24px;height:24px;object-fit:cover;border-radius:5px;pointer-events:none;filter:drop-shadow(0 2px 2px #000)}
+.base-art{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;width:42px;height:42px;object-fit:contain;object-position:center center;border-radius:8px;background:#090a0b;filter:drop-shadow(0 2px 2px #000);pointer-events:none}
+.marker-art{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:24px;height:24px;object-fit:contain;object-position:center center;border-radius:5px;background:#090a0b;pointer-events:none;filter:drop-shadow(0 2px 2px #000)}
 .marker.enemy-reveal .piece-art{border-radius:50%}
 .stack-second.art-stack{padding:0;overflow:hidden;background:#0c0d0e}
-.stack-second.art-stack img{width:100%;height:100%;object-fit:cover}
-.bonus-icon img,.effect-inline-art{width:20px;height:20px;object-fit:cover;border-radius:4px;vertical-align:-5px;margin-right:3px}
+.stack-second.art-stack img{width:100%;height:100%;object-fit:contain;object-position:center center;background:#090a0b}
+.bonus-icon img,.effect-inline-art{width:20px;height:20px;object-fit:contain;object-position:center center;border-radius:4px;vertical-align:-5px;margin-right:3px;background:#090a0b}
 .mode-arena .piece-art-svg,.mode-arena .terrain-art-svg,.mode-arena .marker-art-svg{pointer-events:none}
 @media(max-width:680px){
   .roster-icon{width:34px;height:34px;flex-basis:34px}
@@ -401,12 +401,11 @@ button:not(:disabled):active,a.mode-btn:active,a.toplink:active,.btn:active{tran
 .mode-arena .tri-cell.kamikaze-highlight{stroke:#ff6953!important;stroke-width:5!important;filter:drop-shadow(0 0 6px rgba(255,82,55,.8))}
 .mode-arena .terrain-hp-svg{font-size:10px;font-weight:900;fill:#ffd0bd;stroke:#160d08;stroke-width:3;paint-order:stroke;pointer-events:none}
 .mode-arena .arena-axis{font-weight:900;fill:#f4e6c5;stroke:#17120c;stroke-width:2.2;paint-order:stroke;text-anchor:middle;dominant-baseline:middle;pointer-events:none}
-.mode-arena .arena-axis-letter{font-size:12px}.mode-arena .arena-axis-number{font-size:10px;opacity:.96}.mode-arena .arena-axis-sector{font-size:11px;letter-spacing:.7px;fill:#ffd98a}
-@media(max-width:680px){.hp-badge.terrain-hp{font-size:7px!important;padding:0 2px!important}.mode-arena .arena-axis-letter{font-size:11px}.mode-arena .arena-axis-number{font-size:9px}.mode-arena .arena-axis-sector{font-size:9px}.mode-arena .terrain-hp-svg{font-size:9px}}
+@media(max-width:680px){.hp-badge.terrain-hp{font-size:7px!important;padding:0 2px!important}.mode-arena .terrain-hp-svg{font-size:9px}}
 
 /* v1.15.32 — regras visuais, biomas e coordenadas */
 .mode-arena .arena-rules-overlay .qr-visual{display:grid;grid-template-columns:64px 1fr;gap:10px;align-items:center}
-.mode-arena .arena-rules-overlay .qr-art{width:58px;height:58px;object-fit:cover;border-radius:9px;border:1px solid #6a5536;background:#090a0b;box-shadow:0 3px 10px #0008}
+.mode-arena .arena-rules-overlay .qr-art{width:58px;height:58px;object-fit:contain;object-position:center center;border-radius:9px;border:1px solid #6a5536;background:#090a0b;box-shadow:0 3px 10px #0008}
 @media(max-width:680px){.mode-arena .arena-rules-overlay .qr-visual{grid-template-columns:52px 1fr}.mode-arena .arena-rules-overlay .qr-art{width:48px;height:48px}}
 
 /* v1.15.33 — coordenadas da Arena agora ficam apenas nas bordas, estilo xadrez/batalha naval. */
@@ -414,3 +413,109 @@ button:not(:disabled):active,a.mode-btn:active,a.toplink:active,.btn:active{tran
 /* v1.15.34 — biomas da Arena menores e distribuídos em simetria rotacional. */
 
 .trait-icon{width:20px;height:20px;object-fit:contain;vertical-align:middle;filter:drop-shadow(0 0 4px rgba(82,153,255,.45))}.flying-trait{display:inline-flex;align-items:center;gap:5px}
+
+/* v1.15.45 — origem de habilidade, Presença Fantasma e eco conhecido. */
+.cell.ability-origin{box-shadow:inset 0 0 0 3px rgba(255,215,112,.88),inset 0 0 18px rgba(255,204,89,.22)!important}
+
+.presence-hint.known-false{filter:saturate(.55);opacity:.78;text-decoration:line-through}
+.mode-arena .tri-cell.ability-origin{stroke:#ffd875!important;stroke-width:4.5!important;filter:drop-shadow(0 0 5px rgba(255,211,105,.65))}
+.mode-arena .false-presence-svg{font-size:13px;fill:#d9a7ff;stroke:#1a0a25;stroke-width:2.5;paint-order:stroke;pointer-events:none;filter:drop-shadow(0 0 4px rgba(180,105,255,.7))}
+
+/* v1.15.64 — centralização fina de tokens, estruturas e marcadores */
+.cell{position:relative}
+.piece-token{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+.piece-token.enemy-reveal{left:7px;top:7px;transform:none}
+.base-label{position:absolute;left:3px;top:3px}
+.stack-second{position:absolute;right:1px;bottom:1px}
+.marker{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center}
+.combat-mark{left:-7px;top:-9px;transform:none}
+.impact{right:-2px;top:-3px;left:auto;transform:none}
+.false-presence-marker{left:50%!important;top:50%!important;right:auto!important;transform:translate(-50%,-50%)!important;font-size:16px!important;filter:drop-shadow(0 0 4px rgba(181,117,255,.9));z-index:9}
+
+/* v1.15.64 — leitura clara de turno e confirmação de ações online */
+.turn-guide{margin:8px 0 10px!important;padding:10px 12px!important;border-width:1px!important;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;line-height:1.35}
+.turn-guide.hidden{display:none!important}
+.turn-guide.your-turn{border-color:#7d6b3e!important;background:linear-gradient(145deg,#2d2819,#171714)!important;box-shadow:0 0 0 1px rgba(219,183,92,.12),0 7px 20px rgba(0,0,0,.2)}
+.turn-guide.waiting-turn{border-color:#3e4652!important;background:linear-gradient(145deg,#191d22,#111316)!important}
+.turn-guide.turn-again{border-color:#5d825a!important;background:linear-gradient(145deg,#1d2c1c,#121914)!important;box-shadow:0 0 0 1px rgba(115,182,106,.15),0 7px 20px rgba(0,0,0,.2)}
+.turn-guide .turn-guide-title{font-weight:900;letter-spacing:.025em;color:#f0d8a5}
+.turn-guide.turn-again .turn-guide-title{color:#bfe3b8}
+.turn-guide .turn-guide-detail{color:#bdb3a3;font-size:12px}
+.turn-guide .turn-guide-count{white-space:nowrap;padding:4px 8px;border:1px solid rgba(190,160,102,.26);border-radius:999px;background:#111310;color:#ead9b9;font-size:11px;font-weight:800}
+.turn-usage{margin:0 0 7px;padding:5px 7px;border:1px solid rgba(170,143,95,.22);border-radius:6px;background:rgba(0,0,0,.16);font-size:11px;color:#cfc0a7}
+.action-confirmed{color:#bfe3b8;font-weight:700}
+@media(max-width:680px){.turn-guide{align-items:flex-start}.turn-guide .turn-guide-count{width:100%;text-align:center}}
+/* v1.15.64 — objetos do campo sempre acima da arte do bioma. */
+.marker-art{z-index:6}
+
+/* v1.15.64 — marcador de casa revelada pequeno no canto */
+.marker-art.reveal-marker{left:auto!important;right:2px!important;top:2px!important;transform:none!important;width:18px!important;height:18px!important;z-index:11!important;background:#090a0bd9!important}
+.marker.reveal-marker{left:auto!important;right:2px!important;top:2px!important;transform:none!important;width:18px;height:18px;z-index:11!important}
+.marker.reveal-marker .marker-art{position:static!important;transform:none!important;width:18px!important;height:18px!important}
+.mode-arena .reveal-mark-svg{pointer-events:none;filter:drop-shadow(0 1px 2px #000)}
+
+/* v1.15.64 — marcadores de campo em cantos, sem cobrir as peças */
+.corner-marker{--marker-stack:0;z-index:12!important;pointer-events:none!important}
+.corner-marker.slot-tl{position:absolute!important;left:2px!important;right:auto!important;top:calc(2px + (var(--marker-stack) * 13px))!important;bottom:auto!important;transform:none!important}
+.corner-marker.slot-tr{position:absolute!important;right:2px!important;left:auto!important;top:calc(2px + (var(--marker-stack) * 13px))!important;bottom:auto!important;transform:none!important}
+.corner-marker.slot-bl{position:absolute!important;left:2px!important;right:auto!important;bottom:calc(2px + (var(--marker-stack) * 13px))!important;top:auto!important;transform:none!important}
+.corner-marker.slot-br{position:absolute!important;right:2px!important;left:auto!important;bottom:calc(2px + (var(--marker-stack) * 13px))!important;top:auto!important;transform:none!important}
+.marker-art.corner-marker{width:16px!important;height:16px!important;object-fit:contain!important;background:#090a0bd9!important;border-radius:4px!important}
+.marker.corner-marker{width:16px!important;height:16px!important;font-size:11px!important;display:flex!important;align-items:center!important;justify-content:center!important}
+.marker.corner-marker .marker-art{position:static!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;transform:none!important;width:16px!important;height:16px!important}
+.presence-hint.corner-marker{right:auto;top:auto;width:16px;height:16px}
+.false-presence-marker.corner-marker{width:16px!important;height:16px!important;font-size:11px!important}
+@media(max-width:600px){
+  .marker-art.corner-marker,.marker.corner-marker{width:14px!important;height:14px!important}
+  .marker.corner-marker .marker-art{width:14px!important;height:14px!important}
+  .corner-marker.slot-tl,.corner-marker.slot-tr{top:calc(1px + (var(--marker-stack) * 11px))!important}
+  .corner-marker.slot-bl,.corner-marker.slot-br{bottom:calc(1px + (var(--marker-stack) * 11px))!important}
+  .corner-marker.slot-tl,.corner-marker.slot-bl{left:1px!important}.corner-marker.slot-tr,.corner-marker.slot-br{right:1px!important}
+}
+
+
+/* v1.15.64 — leitura visual do estado de cada unidade e das ações possíveis */
+.turn-unit-list{display:grid;gap:5px;margin-top:7px}
+.turn-unit-chip{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;border:1px solid #37342e;border-radius:7px;background:#131414;font-size:11px}
+.turn-unit-chip small{font-size:9px;font-weight:800;letter-spacing:.025em;text-align:right}
+.turn-unit-chip.ready{border-color:#4d684d;background:linear-gradient(145deg,#182019,#121613)}
+.turn-unit-chip.ready small{color:#a9d4a8}
+.turn-unit-chip.active{border-color:#b68b4a;background:linear-gradient(145deg,#3b2d18,#1c1811);box-shadow:0 0 0 2px rgba(212,165,82,.15),0 0 14px rgba(212,165,82,.12)}
+.turn-unit-chip.active small{color:#ffe0a2}
+.turn-unit-chip.spent{opacity:.6;filter:saturate(.55)}
+.turn-unit-chip.spent small{color:#aaa397}
+.turn-unit-chip.dead{opacity:.45;filter:grayscale(.75)}
+.turn-unit-chip.waiting{opacity:.72}
+.char.ready-char{border-color:#536b51!important;box-shadow:inset 0 0 0 1px rgba(118,173,110,.10)}
+.char.turn-active-char{opacity:1!important;filter:none!important;border-color:#c79b51!important;box-shadow:0 0 0 2px rgba(218,172,88,.24),0 0 18px rgba(218,172,88,.16)!important}
+.char.turn-active-char .roster-state{color:#f5d69a!important;font-weight:900}
+.char.spent-char .roster-state{font-weight:800}
+.cell.active-cell{outline:3px solid rgba(239,197,112,.95)!important;outline-offset:-4px!important;box-shadow:inset 0 0 0 2px rgba(255,223,150,.30),inset 0 0 24px rgba(232,184,91,.20),0 0 10px rgba(213,166,78,.22)!important}
+.controls button.action-ready:not(:disabled){border-color:#71825c!important;box-shadow:inset 0 0 0 1px rgba(142,175,112,.13),0 0 10px rgba(105,145,85,.08);filter:brightness(1.08)}
+.controls button.action-current:not(:disabled){border-color:#d0a154!important;background:linear-gradient(180deg,#66491f,#342716)!important;color:#fff0cd!important;box-shadow:inset 0 0 0 1px rgba(255,221,153,.18),0 0 0 2px rgba(208,161,84,.16),0 0 15px rgba(208,161,84,.16)!important;filter:brightness(1.12)}
+.controls button.action-current:not(:disabled)::after{content:'  •';font-weight:900}
+@media(max-width:600px){.turn-unit-chip{padding:5px 6px}.turn-unit-chip small{font-size:8px}}
+
+/* v1.15.64 — sincronização do Treino com os estados de ação atuais */
+.mode-training .training-action-hint{margin-top:8px!important;padding:8px 10px!important;border-color:#5f513b!important;color:#e7d8bb;font-size:12px;line-height:1.4}
+.mode-training #nextRound.action-ready:not(:disabled){border-color:#66758a!important}
+
+/* v1.15.64 — Arena: opções de dificuldade legíveis e coordenadas próprias. */
+.mode-arena #difficultyB,.mode-arena #difficultyC{color-scheme:dark!important;background:#17150f!important;color:#f5ead4!important;border-color:#6a5638!important}
+.mode-arena #difficultyB option,.mode-arena #difficultyC option{background:#191713!important;color:#f5ead4!important}
+.mode-arena #difficultyB:focus,.mode-arena #difficultyC:focus{outline:2px solid rgba(195,154,85,.32)!important;outline-offset:1px;border-color:#b28b4f!important}
+.mode-arena .arena-border-coordinate{font-family:Inter,system-ui,sans-serif}
+
+.cooldown-note{margin-top:7px;padding:6px 8px;border:1px solid #6c5738;border-radius:7px;background:#1f1a12;color:#e8cf9f;font-size:11px;line-height:1.35}
+.cooldown-note b{color:#ffd98a}
+
+/* v1.15.64 — escolhidos sempre visíveis durante filtros da seleção. */
+.selected-strip{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:7px 0 9px;padding:7px 8px;border:1px solid #4c4132;border-radius:8px;background:rgba(12,13,14,.62);min-height:34px}
+.selected-strip.hidden{display:none!important}.selected-strip-label{font-size:10px;color:#bba984;margin-right:2px}.selected-chip{display:inline-flex!important;align-items:center;gap:5px!important;padding:4px 7px!important;min-height:28px!important;border-radius:999px!important;font-size:10px!important;border-color:#6d593c!important;background:#211b13!important}.selected-chip img{width:18px;height:18px;object-fit:contain;border-radius:50%;background:#090a0b}.selected-chip .remove-x{font-weight:900;color:#efb1a4;font-size:12px}.selected-chip:hover{border-color:#b0874d!important}
+
+/* v1.15.64 — duas unidades na mesma casa continuam visualmente identificáveis. */
+.piece-token.shared-primary{width:31px!important;height:31px!important;left:38%!important;top:43%!important;z-index:5!important}
+.stack-second.shared-stack{width:29px!important;height:29px!important;right:2px!important;bottom:2px!important;z-index:10!important;border:2px solid #8d7755!important;box-shadow:0 2px 7px rgba(0,0,0,.72)!important;background:#0b0c0d!important}
+.stack-second.shared-stack img{width:100%!important;height:100%!important;object-fit:contain!important;border-radius:50%!important}
+.mode-arena .shared-piece-svg{filter:drop-shadow(0 2px 3px rgba(0,0,0,.82))}
+@media(max-width:600px){.piece-token.shared-primary{width:25px!important;height:25px!important}.stack-second.shared-stack{width:23px!important;height:23px!important}}

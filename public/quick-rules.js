@@ -20,15 +20,15 @@
       <div class="qr-content">
         <section class="qr-page active" data-page="partida">
           <div class="qr-card"><b>🏆 Objetivo</b><p>A quantidade de personagens originais e o número de perdas necessárias para derrotar cada lado são definidos nas <strong>Configurações da Partida</strong>. O padrão continua sendo 4 personagens e derrota ao perder 3 originais. Unidades criadas durante a partida não contam como perdas originais.</p></div>
-          <div class="qr-card"><b>🔄 Rodadas e ativações</b><p>Cada unidade viva pode agir no máximo uma vez por rodada. O limite do lado é <strong>suas unidades vivas</strong> ou <strong>unidades vivas do adversário + 1</strong>, valendo o menor número. Invocações, divisões e outras unidades extras entram nessa contagem enquanto estiverem vivas.</p><div class="qr-example">Ex.: você tem 6 unidades vivas e o adversário tem 4 → pode ativar 5. Se tiver 3 contra 5 → ativa as 3.</div></div>
-          <div class="qr-card"><b>🎯 Turno da unidade</b><p>Selecione uma unidade → movimento opcional → ataque <strong>ou</strong> habilidade → encerre. Algumas habilidades encerram a ativação imediatamente.</p></div>
+          <div class="qr-card"><b>🔄 Rodadas e turnos</b><p>Cada unidade viva pode agir no máximo uma vez por rodada. O limite do lado é <strong>suas unidades vivas</strong> ou <strong>unidades vivas do adversário + 1</strong>, valendo o menor número. Invocações, divisões e outras unidades extras entram nessa contagem enquanto estiverem vivas.</p><div class="qr-example">Ex.: você tem 6 unidades vivas e o adversário tem 4 → até 5 unidades suas podem ter turno na rodada. Se tiver 3 contra 5 → as 3 podem agir.</div></div>
+          <div class="qr-card"><b>🎯 Turno da unidade</b><p>Selecione uma unidade. Você pode mover primeiro e depois usar <strong>ataque ou habilidade</strong>. Ataques e habilidades geralmente encerram o turno automaticamente; se não quiser usar nenhum, encerre manualmente.</p></div>
           ${visual(A.structures?.baseAlly,'🏰 Postos de Operação','Cada lado começa com 2. Sabotar um Posto permite escolher um benefício disponível para uma unidade aliada.','Posto de Operação')}
-          <div class="qr-card"><b>👁️ Cerco Final</b><p>Quando todos os Postos ativos forem sabotados, a borda externa do tabuleiro passa a revelar unidades permanentemente. Efeitos de ocultação continuam seguindo suas próprias regras.</p></div>
+          <div class="qr-card"><b>👁️ Cerco Final</b><p>Quando todos os Postos ativos forem sabotados, a borda externa do tabuleiro passa a revelar unidades permanentemente.</p></div>
         </section>
 
         <section class="qr-page" data-page="combate">
-          ${visual(A.effects?.dano,'⚔️ Ataque normal','O ataque normal usa ATQ como dano e ALC como distância máxima. Árvores e Pedras também podem receber dano.','Ataque')}
-          ${visual(A.effects?.confronto,'🤺 Confronto Direto','Entrar na casa de um inimigo inicia Confronto Direto. Ele é separado do ataque normal e usa os arquétipos para definir quem vence.','Confronto Direto')}
+          ${visual(A.effects?.dano,'⚔️ Ataque normal','ATQ é o dano e ALC é a distância máxima. Quando alguém ataca, a casa atingida fica marcada no mapa para mostrar onde o ataque aconteceu. Árvores e Pedras também podem receber dano.','Ataque')}
+          ${visual(A.effects?.confronto,'🤺 Confronto Direto','Entrar na casa de um inimigo inicia Confronto Direto, resolvido pelos arquétipos. A casa do confronto fica marcada com ⚔️ no mapa.','Confronto Direto')}
           <div class="qr-card"><b>🧱 Biomas destrutíveis</b><p>Árvores e Pedras possuem Vida. Ao chegar a 0, deixam de bloquear o caminho conforme a regra de cada bioma.</p></div>
           <div class="qr-card"><b>💥 Dano em área</b><p>Efeitos em área atingem todas as casas indicadas pela prévia. Quando a habilidade puder acertar aliados, a área é mostrada antes da confirmação.</p></div>
         </section>
@@ -43,29 +43,21 @@
         </section>
 
         <section class="qr-page" data-page="personagens">
-          ${visual(A.effects?.voador,'Voador','Unidades com este símbolo ignoram o custo extra de Pântano e podem atravessar Árvores e Pedras. Elas não podem terminar voluntariamente o movimento sobre Árvore ou Pedra. A ficha mostra este símbolo sempre que a unidade estiver em uma forma voadora.','Voador')}
+          ${visual(A.effects?.voador,'Voador','Ignora o custo extra do Pântano e pode atravessar Árvores e Pedras, mas não terminar o movimento sobre elas. Para cruzar um obstáculo, precisa ter movimento suficiente para entrar e sair; cancelar ou encerrar sobre ele não é permitido.','Voador')}
           ${visual(A.archetypes?.R,'🛡️ Vanguarda','Vence Executor e perde para Estrategista.','Vanguarda')}
           ${visual(A.archetypes?.P,'📜 Estrategista','Vence Vanguarda e perde para Executor.','Estrategista')}
           ${visual(A.archetypes?.S,'🗡️ Executor','Vence Estrategista e perde para Vanguarda.','Executor')}
           ${visual(A.archetypes?.J,'🃏 Coringa','Vence Vanguarda, Estrategista e Executor. Empata com outro Coringa.','Coringa')}
           ${visual(A.archetypes?.C,'🦴 Condenado','Perde para os demais arquétipos e empata com outro Condenado.','Condenado')}
-          <div class="qr-card"><b>🧩 Unidades extras</b><p>Invocações, divisões e outras unidades criadas entram normalmente na contagem de unidades vivas e de ativações. A condição de vitória considera apenas as unidades originais que começaram a partida e o limite de perdas configurado.</p></div>
+          <div class="qr-card"><b>📋 Habilidades dos personagens</b><p>As habilidades e características de cada personagem aparecem na própria ficha ao selecioná-lo.</p></div>
         </section>
 
         <section class="qr-page" data-page="info">
-          ${visual(A.effects?.dano,'Impacto de ataque','Marca uma casa onde ocorreu impacto de ataque ou dano visível para você.','Impacto de ataque')}
-          ${visual(A.effects?.confronto,'Confronto Direto','Indica que houve um Confronto Direto naquela casa.','Confronto Direto')}
-          ${visual(A.effects?.presenca,'Presença detectada','Indica que a Percepção encontrou presença em uma região possível. Isso não significa, por si só, posição exata.','Presença detectada')}
-          ${visual(A.effects?.revelada,'Casa revelada','A casa está sendo observada por um efeito de revelação e pode mostrar unidades que normalmente estariam ocultas.','Casa revelada')}
-          ${visual(A.effects?.lapide,'Lápide','Indica um cadáver existente naquela casa. Alguns efeitos podem interagir com cadáveres.','Lápide')}
-          ${visual(A.effects?.espelho,'Espelho','Objeto criado no campo. O dono conhece sua posição; para o adversário ele continua seguindo as regras de informação oculta.','Espelho')}
-          ${visual(A.structures?.trapHunter,'Armadilha de dano','Armadilha própria conhecida pelo dono. É consumida quando um inimigo entra depois na casa.','Armadilha de dano')}
-          ${visual(A.structures?.trapSentry,'Armadilha de revelação','Armadilha própria conhecida pelo dono. Revela o inimigo que entrar nela conforme a duração do efeito.','Armadilha de revelação')}
-          ${visual(A.effects?.vinculo,'Vínculo','Indica que duas unidades estão ligadas por um efeito de vínculo.','Vínculo')}
-          ${visual(A.effects?.oculto,'Ocultação','Indica um efeito de ocultação. Quando a ocultação for total, efeitos de detecção não conseguem localizar a unidade enquanto durar.','Ocultação')}
-          ${visual(A.structures?.baseAlly,'Posto de Operação','Estrutura pública no campo. Postos bloqueiam movimento e podem ser sabotados pelo adversário.','Posto de Operação')}
-          ${visual(A.structures?.baseSabotagedAlly,'Posto sabotado','Mostra que aquele Posto já foi sabotado e não pode conceder novamente o mesmo estado normal.','Posto sabotado')}
-          <div class="qr-card"><b>🕵️ Informação oculta</b><p>Você e a IA recebem somente o que as regras permitem conhecer. Marcadores temporários ajudam a entender o que aconteceu sem revelar informação proibida.</p></div>
+          ${visual(A.effects?.dano,'Impacto de ataque','A casa atingida por um ataque fica marcada no mapa para indicar onde o golpe aconteceu.','Impacto de ataque')}
+          ${visual(A.effects?.confronto,'Confronto Direto','O símbolo ⚔️ marca a casa onde ocorreu um Confronto Direto.','Confronto Direto')}
+          <div class="qr-card"><b>❗ Presença detectada</b><p>Quando a PER detecta alguém sem saber a posição exata, um <strong>❗ vermelho</strong> aparece nas casas possíveis.</p></div>
+          ${visual(A.effects?.revelada,'Casa revelada','Quando uma casa está sendo revelada, este símbolo aparece pequeno no canto para não esconder a unidade revelada.','Casa revelada')}
+          <div class="qr-card"><b>🕵️ Informação oculta</b><p>Posições inimigas só aparecem quando alguma regra realmente as revela. Os marcadores mostram o que você conseguiu descobrir sem entregar informação extra.</p></div>
         </section>
 
         <section class="qr-page" data-page="biomas">
@@ -84,7 +76,7 @@
     .qr-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}.qr-head h2{margin:0;color:#f1d8a5;font-family:Georgia,"Times New Roman",serif}.qr-sub{font-size:12px;color:#a9a59c;margin-top:4px}
     .qr-tabs{display:flex;gap:7px;flex-wrap:wrap;margin:16px 0 12px;padding-bottom:12px;border-bottom:1px solid #3a3329;position:sticky;top:-18px;z-index:5;background:#151516}.qr-tab{min-width:112px}.qr-tab.active{border-color:#b48b4c;background:linear-gradient(180deg,#59401f,#302416);color:#fff1d0}
     .qr-page{display:none;grid-template-columns:1fr 1fr;gap:10px}.qr-page.active{display:grid}.qr-card{background:#111214;border:1px solid #353027;border-radius:9px;padding:12px;font-size:13px;line-height:1.48}.qr-card b{color:#ead2a2}.qr-card p{margin:6px 0 0;color:#ddd}.qr-example{margin-top:8px;padding:8px 9px;border-left:3px solid #9f7c46;background:#181612;color:#e7d6b6;border-radius:4px}
-    .qr-visual{display:grid;grid-template-columns:64px 1fr;gap:10px;align-items:center}.qr-art{width:58px;height:58px;object-fit:contain;border-radius:9px;border:1px solid #6a5536;background:#090a0b;box-shadow:0 3px 10px #0008}
+    .qr-visual{display:grid;grid-template-columns:64px 1fr;gap:10px;align-items:center}.qr-art{width:58px;height:58px;object-fit:contain;object-position:center center;border-radius:9px;border:1px solid #6a5536;background:#090a0b;box-shadow:0 3px 10px #0008}
     @media(max-width:680px){.qr-page.active{grid-template-columns:1fr}.qr-modal{padding:14px}.qr-tab{min-width:auto;flex:1}.qr-head{align-items:center}.qr-visual{grid-template-columns:52px 1fr}.qr-art{width:48px;height:48px}}
   `;
   document.head.appendChild(st);document.body.appendChild(wrap);
