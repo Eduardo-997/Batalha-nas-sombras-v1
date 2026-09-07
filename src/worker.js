@@ -2,27 +2,25 @@ import {TriReferee,TriAI,applyTriAction,TRI_SIDES} from './tri-core.js';
 // Jogo tático v1.13.5 — Cloudflare Worker + Durable Object
 // Regras e árbitro mantidos autoritativos no servidor para o X1.
 'use strict';
-// Batalha nas Sombras v1.15.21 — dificuldade da IA C sincronizada pela sala.
-'use strict';
 var __gameRoot = typeof window!=='undefined' ? window : globalThis;
 __gameRoot.GameRules = (() => {
   const defs = [
     {name:'Arqueiro',icon:'🏹',type:'S',typeIcon:'🗡️',v:1,m:1,a:1,range:3,per:1,ah:0},
     {name:'Ninja',icon:'🗡️',type:'S',typeIcon:'🗡️',v:1,m:2,a:1,range:2,per:1,ah:0},
-    {name:'Piromante',icon:'🔥',type:'S',typeIcon:'🗡️',v:1,m:1,a:1,range:1,per:1,ah:1},
+    {name:'Piromante',icon:'🔥',type:'S',typeIcon:'🗡️',v:1,m:1,a:1,range:1,per:1,ah:2},
     {name:'Kamikaze',icon:'💣',type:'S',typeIcon:'🗡️',v:1,m:1,a:0,range:1,per:1,ah:1},
     {name:'Caçador',icon:'🐾',type:'S',typeIcon:'🗡️',v:1,m:1,a:1,range:1,per:1,ah:1},
-    {name:'Paranoia',icon:'🧠',type:'S',typeIcon:'🗡️',v:1,m:1,a:1,range:1,per:2,ah:0},
+    {name:'Paranoia',icon:'🧠',type:'R',typeIcon:'🛡️',v:2,m:2,a:0,range:1,per:1,ah:2},
     {name:'Escudeiro',icon:'🛡️',type:'R',typeIcon:'🛡️',v:2,m:1,a:0,range:1,per:1,ah:0},
     {name:'Golem',icon:'🗿',type:'R',typeIcon:'🛡️',v:2,m:1,a:0,range:1,per:1,ah:0},
     {name:'Cavaleiro',icon:'🐎',type:'R',typeIcon:'🛡️',v:1,m:3,a:1,range:1,per:1,ah:0},
     {name:'Slime',icon:'🟢',type:'R',typeIcon:'🛡️',v:1,m:1,a:0,range:1,per:1,ah:0},
     {name:'Zumbi',icon:'🧟',type:'R',typeIcon:'🛡️',v:2,m:1,a:1,range:1,per:1,ah:0},
-    {name:'Druida',icon:'🌿',type:'R',typeIcon:'🛡️',v:1,m:1,a:1,range:1,per:1,ah:1},
+    {name:'Druida',icon:'🌿',type:'S',typeIcon:'🗡️',v:1,m:1,a:1,range:1,per:1,ah:1},
     {name:'Vidente',icon:'👁️',type:'P',typeIcon:'📜',v:1,m:1,a:0,range:1,per:1,ah:3},
     {name:'Mago do Espelho',icon:'🔮',type:'P',typeIcon:'📜',v:1,m:1,a:0,range:1,per:1,ah:2},
-    {name:'Necromante',icon:'☠️',type:'P',typeIcon:'📜',v:1,m:1,a:1,range:1,per:1,ah:1},
-    {name:'Doppelgänger',icon:'🎭',type:'P',typeIcon:'📜',v:1,m:1,a:1,range:1,per:1,ah:2},
+    {name:'Necromante',icon:'☠️',type:'P',typeIcon:'📜',v:1,m:2,a:1,range:1,per:1,ah:1},
+    {name:'Doppelgänger',icon:'🎭',type:'P',typeIcon:'📜',v:1,m:2,a:1,range:1,per:1,ah:2},
     {name:'Sentinela',icon:'🦉',type:'P',typeIcon:'📜',v:1,m:2,a:0,range:1,per:1,ah:1},
     {name:'Bardo',icon:'🎵',type:'P',typeIcon:'📜',v:1,m:1,a:0,range:1,per:1,ah:2},
     {name:'Trapaceiro',icon:'🃏',type:'J',typeIcon:'🃏',v:1,m:1,a:0,range:1,per:1,ah:0,diag:true},
@@ -43,7 +41,7 @@ __gameRoot.GameRules = (() => {
     {id:'life',icon:'❤️',name:'Reforço',description:'+1 Vida máxima e +1 Vida atual para uma unidade aliada viva.'},
     {id:'attack',icon:'⚔️',name:'Armamento',description:'+1 ATQ permanente para uma unidade aliada viva.'},
     {id:'range',icon:'🎯',name:'Mira',description:'+1 ALC permanente para uma unidade aliada viva que possua ataque normal.'},
-    {id:'abilityRange',icon:'✨',name:'Canalização',description:'+1 Alc. Hab. permanente para uma unidade com habilidade que use Alcance de Habilidade.'}
+    {id:'abilityRange',icon:'✨',name:'Alc. Hab.',description:'+1 Alc. Hab. permanente para uma unidade com habilidade que use Alcance de Habilidade.'}
   ];
   const rc=c=>({x:c.charCodeAt(0)-65,y:Number(c.slice(1))-1});
   const coord=(x,y)=>String.fromCharCode(65+x)+(y+1);
@@ -99,11 +97,11 @@ __gameRoot.GameRules = (() => {
     }
     return out;
   }
-  function abilityCells(p){
+  function abilityCells(p,includeSelf=false){
     const d=defOf(p),out=[];
     // Na interface, p.ah é o Alc. Hab. final; usar esse valor evita perder bônus temporários na marcação.
     const ah=Number.isFinite(Number(p?.ah))?Number(p.ah):d.ah;
-    for(let y=0;y<8;y++)for(let x=0;x<8;x++){const c=coord(x,y);if(c!==p.coord&&man(p.coord,c)<=ah)out.push(c)}
+    for(let y=0;y<8;y++)for(let x=0;x<8;x++){const c=coord(x,y);if((includeSelf||c!==p.coord)&&man(p.coord,c)<=ah)out.push(c)}
     return out;
   }
   function blastCells(c,ah=1){
@@ -145,12 +143,12 @@ __refRoot.GameReferee = class GameReferee {
 
   reset(){
     this.#s={
-      phase:'setup', mode:null, round:1, turn:'player', roundStarter:'player', idSeq:1, gameOver:false, result:null, aiDifficulty:'normal', matchConfig:{teamSize:{player:4,enemy:4},lossLimit:{player:3,enemy:3}},
+      phase:'setup', mode:null, round:1, turn:'player', roundStarter:'player', idSeq:1, gameOver:false, result:null, surrenderedBy:null, aiDifficulty:'normal', matchConfig:{teamSize:{player:4,enemy:4},lossLimit:{player:3,enemy:3}},
       pieces:{player:[],enemy:[]}, bases:[], chosenBaseBonuses:{player:[],enemy:[]}, corpses:[], mirrors:[], pendingSlimeSplits:[],
       history:{player:[],enemy:[]}, intel:{player:[],enemy:[]}, impact:{player:null,enemy:null}, combatMarks:{player:[],enemy:[]}, combatHold:{player:false,enemy:false}, perceptionHints:{player:[],enemy:[]},
       seer:{player:new Set(),enemy:new Set()}, seerExpires:{player:false,enemy:false},
       activation:{player:null,enemy:null}, roundActivations:{player:0,enemy:0}, pendingCombat:null, doppelChoice:{player:null,enemy:null},
-      trees:[{coord:'B3',state:'live',hp:3},{coord:'G6',state:'live',hp:3}], rocks:['F2','C7'], rockHp:{F2:3,C7:3}, water:['D3','E6'], swamps:['C5','F4'], traps:{player:[],enemy:[]}, spotReveals:{player:{},enemy:{}}, replayEvent:null
+      trees:[{coord:'B3',state:'live',hp:3},{coord:'G6',state:'live',hp:3}], rocks:['F2','C7'], rockHp:{F2:3,C7:3}, water:['D3','E6'], swamps:['C5','F4'], traps:{player:[],enemy:[]}, falsePresences:{player:[],enemy:[]}, spotReveals:{player:{},enemy:{}}, replayEvent:null
     };
   }
 
@@ -170,6 +168,9 @@ __refRoot.GameReferee = class GameReferee {
       attack:run((to)=>self.#attack(side,to)),
       selectPyroTarget:run((to)=>self.#selectPyroTarget(side,to)),
       confirmPyroAttack:run(()=>self.#confirmPyroAttack(side)),
+      confirmSureShot:run(()=>self.#confirmSureShot(side)),
+      selectParanoiaTarget:run((to)=>self.#selectParanoiaTarget(side,to)),
+      confirmParanoia:run(()=>self.#confirmParanoia(side)),
       startAbility:run(()=>self.#startAbility(side)),
       confirmKamikaze:run(()=>self.#confirmKamikaze(side)),
       useSeer:run((cells)=>self.#useSeer(side,cells)),
@@ -184,6 +185,7 @@ __refRoot.GameReferee = class GameReferee {
       chooseCombatPosition:run((advance)=>self.#chooseCombatPosition(side,advance)),
       sabotageBase:run((baseId,bonusId,targetPieceId=null)=>self.#sabotageBase(side,baseId,bonusId,targetPieceId)),
       chooseDoppelCopy:run((copyNew)=>self.#chooseDoppelCopy(side,copyNew)),
+      surrender:run(()=>self.#surrender(side)),
       advanceTrainingRound:run(()=>self.#advanceTrainingRound())
     });
   }
@@ -230,7 +232,7 @@ __refRoot.GameReferee = class GameReferee {
       bases.forEach((coord,i)=>this.#s.bases.push({id:(side==='player'?'bp':'be')+(i+1),owner:side,coord,sabotaged:false}));
     }
     const starter=Math.random()<.5?'player':'enemy';
-    this.#s.phase='play';this.#s.mode='multiplayer';this.#s.round=1;this.#s.roundStarter=starter;this.#s.turn=starter;this.#s.gameOver=false;this.#s.result=null;
+    this.#s.phase='play';this.#s.mode='multiplayer';this.#s.round=1;this.#s.roundStarter=starter;this.#s.turn=starter;this.#s.gameOver=false;this.#s.result=null;this.#s.surrenderedBy=null;
     this.#addHistory('player',`🎲 Clássico iniciado. ${starter==='player'?'Você':'O adversário'} começa a rodada 1. A prioridade inicial alterna a cada rodada.`);
     this.#addHistory('enemy',`🎲 Clássico iniciado. ${starter==='enemy'?'Você':'O adversário'} começa a rodada 1. A prioridade inicial alterna a cada rodada.`);
     return this.#ok(`Partida Clássica iniciada. ${starter==='player'?'Jogador 1':'Jogador 2'} começa.`);
@@ -267,7 +269,7 @@ __refRoot.GameReferee = class GameReferee {
     this.#s.aiDifficulty=['easy','normal','hard','extreme'].includes(difficulty)?difficulty:'normal';
     this.#enemySetup(this.#s.aiDifficulty,cfg.teamSize.enemy);
     const starter=Math.random()<.5?'player':'enemy';
-    this.#s.phase='play'; this.#s.mode='solo'; this.#s.round=1; this.#s.roundStarter=starter; this.#s.turn=starter; this.#s.gameOver=false; this.#s.result=null;
+    this.#s.phase='play'; this.#s.mode='solo'; this.#s.round=1; this.#s.roundStarter=starter; this.#s.turn=starter; this.#s.gameOver=false; this.#s.result=null; this.#s.surrenderedBy=null;
     this.#addHistory('player',`🎲 Partida iniciada. ${starter==='player'?'Você':'A IA'} começa a rodada 1. A prioridade inicial alterna a cada rodada.`);
     this.#addHistory('enemy',`🎲 Partida iniciada. ${starter==='enemy'?'Você':'O jogador'} começa a rodada 1. A prioridade inicial alterna a cada rodada.`);
     return this.#ok(`Partida iniciada. ${starter==='player'?'Você começa':'A IA começa'}.`);
@@ -301,7 +303,7 @@ __refRoot.GameReferee = class GameReferee {
     }
     playerBases.forEach((coord,i)=>this.#s.bases.push({id:'bp'+(i+1),owner:'player',coord,sabotaged:false}));
     enemyBases.forEach((coord,i)=>this.#s.bases.push({id:'be'+(i+1),owner:'enemy',coord,sabotaged:false}));
-    this.#s.phase='play';this.#s.mode='training';this.#s.round=1;this.#s.turn='player';this.#s.gameOver=false;this.#s.result=null;
+    this.#s.phase='play';this.#s.mode='training';this.#s.round=1;this.#s.turn='player';this.#s.gameOver=false;this.#s.result=null;this.#s.surrenderedBy=null;
     this.#addHistory('player','🧪 Treino iniciado. 4 peças e 2 Postos por lado; ambos os lados podem ser controlados livremente.');
     this.#addHistory('enemy','🧪 Treino iniciado. 4 peças e 2 Postos por lado; ambos os lados podem ser controlados livremente.');
     return this.#ok('Treino iniciado. Controle qualquer lado, teste os Postos e repita turnos livremente.');
@@ -431,9 +433,9 @@ __refRoot.GameReferee = class GameReferee {
   #publicPiece(p,viewerSide=p.owner){
     const d=this.#R.defOf(p);const possessedAway=!!p.possessedBy&&viewerSide===p.owner;
     const extraEffects=[...(p.effects||[]).filter(e=>viewerSide===p.owner||e.public!==false)];
-    if(p.paranoia?.revealed&&viewerSide===p.owner)extraEffects.push({id:'paranoia',name:'Paranoia',icon:'🧠',remaining:p.paranoia.remaining,kind:'debuff',tick:'turn'});
+    if(p.paranoiaEchoPending&&p.paranoiaEchoKnownFalse&&viewerSide===p.owner)extraEffects.push({id:'paranoia-echo',name:'Eco da Presença Fantasma',icon:'🧠',remaining:1,kind:'debuff',tick:'turn'});
     if((p.ninjaSmokeRemaining||0)>0&&viewerSide===p.owner)extraEffects.push({id:'ninja-smoke',name:'Bomba de Fumaça',icon:'🌫️',remaining:p.ninjaSmokeRemaining,kind:'buff',tick:'turn'});
-    return {id:p.id,name:p.name,displayName:d.name,icon:d.icon,type:d.type,typeIcon:d.typeIcon||'',hp:p.hp,maxHp:d.v,coord:possessedAway?null:p.coord,alive:possessedAway?false:p.alive,possessedAway,possessing:!!p.possession,activated:p.activated,original:!!p.original,summonType:p.summonType||null,form:p.form||null,copied:p.copied||null,mirrorCooldown:p.mirrorCooldown||0,m:d.m,a:d.a,range:d.range,per:d.per,ah:d.ah||0,diag:!!d.diag,flying:!!d.flying,bonusM:p.bonusM||0,bonusV:p.bonusV||0,bonusA:p.bonusA||0,bonusRange:p.bonusRange||0,bonusAH:p.bonusAH||0,radarAdvanced:!!p.bonusRadarAdvanced,radarExpanded:!!p.bonusRadarExpanded,zombiePending:!!p.zombiePending,zombieTurnsLeft:p.zombieTurnsLeft||0,sureShotCooldown:p.sureShotCooldown||0,sureShotActive:!!p.sureShotActive,ninjaSmokeCooldown:p.ninjaSmokeCooldown||0,ninjaSmokeRemaining:p.ninjaSmokeRemaining||0,golemArmor:((p.golemArmorExpireAfterTurn||0)>(p.turnsTaken||0)?1:0),golemArmorExpireAfterTurn:p.golemArmorExpireAfterTurn||0,linkedToId:viewerSide===p.owner?(p.linkedToId||null):null,effects:extraEffects.map(e=>({id:e.id||'',name:e.name||'Efeito temporário',icon:e.icon||'⏳',remaining:Math.max(0,Number(e.remaining)||0),kind:e.kind||'neutral',tick:e.tick||'round'}))};
+    return {id:p.id,name:p.name,displayName:d.name,icon:d.icon,type:d.type,typeIcon:d.typeIcon||'',hp:p.hp,maxHp:d.v,coord:possessedAway?null:p.coord,alive:possessedAway?false:p.alive,possessedAway,possessing:!!p.possession,activated:p.activated,original:!!p.original,summonType:p.summonType||null,form:p.form||null,copied:p.copied||null,mirrorCooldown:p.mirrorCooldown||0,m:d.m,a:d.a,range:d.range,per:d.per,ah:d.ah||0,diag:!!d.diag,flying:!!d.flying,bonusM:p.bonusM||0,bonusV:p.bonusV||0,bonusA:p.bonusA||0,bonusRange:p.bonusRange||0,bonusAH:p.bonusAH||0,radarAdvanced:!!p.bonusRadarAdvanced,radarExpanded:!!p.bonusRadarExpanded,zombiePending:!!p.zombiePending,zombieTurnsLeft:p.zombieTurnsLeft||0,sureShotCooldown:p.sureShotCooldown||0,sureShotActive:!!p.sureShotActive,pyroCooldown:p.pyroCooldown||0,paranoiaEchoPending:viewerSide===p.owner?!!p.paranoiaEchoPending:false,paranoiaEchoKnownFalse:viewerSide===p.owner?!!p.paranoiaEchoKnownFalse:false,ninjaSmokeCooldown:p.ninjaSmokeCooldown||0,ninjaSmokeRemaining:p.ninjaSmokeRemaining||0,golemArmor:((p.golemArmorExpireAfterTurn||0)>(p.turnsTaken||0)?1:0),golemArmorExpireAfterTurn:p.golemArmorExpireAfterTurn||0,linkedToId:viewerSide===p.owner?(p.linkedToId||null):null,effects:extraEffects.map(e=>({id:e.id||'',name:e.name||'Efeito temporário',icon:e.icon||'⏳',remaining:Math.max(0,Number(e.remaining)||0),kind:e.kind||'neutral',tick:e.tick||'round'}))};
   }
 
   #getView(side){
@@ -442,10 +444,10 @@ __refRoot.GameReferee = class GameReferee {
     const pc=this.#s.pendingCombat;
     const pending=pc&&pc.winnerSide===side?{canChoose:true,canAdvance:!!pc.protectedAllyId||!this.#piecesAt(other,pc.deadCell).length}:null;
     return structuredClone({
-      phase:this.#s.phase, round:this.#s.round, turn:this.#s.turn, gameOver:this.#s.gameOver, result:this.#s.result,
+      phase:this.#s.phase, round:this.#s.round, turn:this.#s.turn, gameOver:this.#s.gameOver, result:this.#s.result, surrenderedBy:this.#s.surrenderedBy||null,
       ownPieces:this.#pieces(side).map(p=>this.#publicPiece(p,side)), visibleOpponents:visible,
       bases:this.#s.bases.map(b=>({id:b.id,owner:b.owner,coord:b.coord,sabotaged:b.sabotaged})),
-      trees:(this.#s.trees||[]).map(t=>({...t})), rocks:[...(this.#s.rocks||[])], rockHp:{...(this.#s.rockHp||{})}, water:[...(this.#s.water||[])], swamps:[...(this.#s.swamps||[])], ownTraps:(this.#s.traps?.[side]||[]).map(t=>({id:t.id,coord:t.coord,kind:t.kind})),
+      trees:(this.#s.trees||[]).map(t=>({...t})), rocks:[...(this.#s.rocks||[])], rockHp:{...(this.#s.rockHp||{})}, water:[...(this.#s.water||[])], swamps:[...(this.#s.swamps||[])], ownTraps:(this.#s.traps?.[side]||[]).map(t=>({id:t.id,coord:t.coord,kind:t.kind})), ownFalsePresences:(this.#s.falsePresences?.[side]||[]).map(f=>({id:f.id,coord:f.coord,seq:f.seq})),
       chosenBaseBonuses:[...this.#s.chosenBaseBonuses[side]], baseBonusCatalog:this.#R.baseBonuses.map(b=>({...b})),
       ownOriginalDeaths:this.#originalDeaths(side), enemyOriginalDeaths:this.#originalDeaths(other), matchConfig:structuredClone(this.#s.matchConfig||{teamSize:{player:4,enemy:4},lossLimit:{player:3,enemy:3}}), corpses:this.#s.corpses.map(c=>({coord:c.coord})),
       ownMirrors:this.#s.mirrors.filter(m=>m.owner===side).map(m=>({coord:m.coord})), seerArea:[...this.#s.seer[side]], impactCell:this.#s.impact[side], combatCells:[...(this.#s.combatMarks?.[side]||[])],
@@ -474,8 +476,7 @@ __refRoot.GameReferee = class GameReferee {
     
     const a=this.#activation(side);
     if(a&&a.committed&&a.pieceId!==id) return this.#fail(`O turno de ${this.#R.defOf(this.#activePiece(side)).name} já foi comprometido.`);
-    if(!a||a.pieceId!==id)this.#clearSpotOnTurnStart(p);
-    this.#s.activation[side]={pieceId:id,committed:a?.pieceId===id?!!a.committed:false,movementUsed:a?.pieceId===id?!!a.movementUsed:false,mode:null,moveRemaining:0,stepsTaken:a?.pieceId===id?(a.stepsTaken||0):0,movePath:a?.pieceId===id?[...(a.movePath||[])]:[],lastPerception:a?.pieceId===id?(a.lastPerception??null):null,mirrorBlockedCurrentActivation:false};
+    this.#s.activation[side]={pieceId:id,committed:a?.pieceId===id?!!a.committed:false,movementUsed:a?.pieceId===id?!!a.movementUsed:false,mode:null,moveRemaining:0,stepsTaken:a?.pieceId===id?(a.stepsTaken||0):0,movePath:a?.pieceId===id?[...(a.movePath||[])]:[],lastPerception:a?.pieceId===id?(a.lastPerception??null):null,pyroTargets:[],paranoiaTargets:[],mirrorBlockedCurrentActivation:false};
     return this.#ok(`${this.#R.defOf(p).name} selecionado. Ainda pode trocar enquanto não agir.`);
   }
 
@@ -489,7 +490,8 @@ __refRoot.GameReferee = class GameReferee {
   #cancelMode(side){
     const bad=this.#validateTurn(side); if(bad)return bad;
     const a=this.#activation(side);if(!a)return this.#fail('Nenhuma peça selecionada.');
-    a.mode=null;a.moveRemaining=0;a.pyroTargets=[];a.kamikazeCells=[];return this.#ok('Ação cancelada. A peça continua selecionada.');
+    if(a.mode==='move')return this.#stopMove(side);
+    a.mode=null;a.moveRemaining=0;a.pyroTargets=[];a.paranoiaTargets=[];a.kamikazeCells=[];return this.#ok('Ação cancelada. A peça continua selecionada.');
   }
 
   #commit(side){
@@ -497,7 +499,12 @@ __refRoot.GameReferee = class GameReferee {
     this.#s.perceptionHints[side]=[];
     if(this.#s.seerExpires[side]){this.#s.seer[side].clear();this.#s.seerExpires[side]=false;}
     const p=this.#activePiece(side);
+    this.#clearSpotOnTurnStart(p);
     a.committed=true;
+    // O Eco só nasce no próximo turno próprio. Em movimento, ele é resolvido
+    // no fim do deslocamento para usar a posição final; nas demais ações,
+    // aparece logo após o turno ser realmente comprometido.
+    if(p&&a.mode!=='move'&&this.#paranoiaEchoReady(p))this.#triggerParanoiaEchoWithoutMove(side,p);
   }
 
   #startMove(side){
@@ -519,6 +526,7 @@ __refRoot.GameReferee = class GameReferee {
     const trap=this.#triggerTraps(side,p,to);
     if(!p.alive||p.owner!==side){a.mode=null;a.moveRemaining=0;return this.#finishActivation(side);}
     if(foe&&foe.alive){p.coord=from;return this.#resolveDirect(side,p,foe,from,to);}
+    const fake=this.#falsePresenceAt(this.#other(side),to);if(fake){if(linkedShield?.alive&&linkedShield.coord===from)linkedShield.coord=to;return this.#resolveFalsePresenceConfrontation(side,p,fake,from,to);}
     if(linkedShield?.alive&&linkedShield.coord===from)linkedShield.coord=to;
     this.#noteReplay('move',side,{piece:this.#R.defOf(p).name,from,to,linkedShield:linkedShield?.alive&&linkedShield.coord===to?this.#R.defOf(linkedShield).name:null,moveCost:cost});
     this.#checkDoppel(side,p);a.moveRemaining-=cost;
@@ -539,41 +547,35 @@ __refRoot.GameReferee = class GameReferee {
     const other=this.#other(side),d=this.#R.defOf(p),per=Math.max(0,d.per||0);
     const orth=this.#R.perceptionCells(p.coord,per,false);
     const traversed=new Set(a.movePath||[]),orthPossible=orth.filter(c=>!traversed.has(c));
-    const visibleEnemyAt=c=>{const e=this.#pieceAt(other,c);return (e&&!this.#isDruidHidden(e)&&!this.#isUndetectable(e))||this.#mirrorAt(c,other)};
+    const visibleEnemyAt=c=>{const e=this.#pieceAt(other,c);return (e&&!this.#isDruidHidden(e)&&!this.#isUndetectable(e))||this.#mirrorAt(c,other)||this.#falsePresenceAt(other,c)};
     const orthHits=orth.filter(visibleEnemyAt);
     const diagOnly=this.#R.perceptionCells(p.coord,per,true).filter(c=>!orth.includes(c)),diagPossible=diagOnly.filter(c=>!traversed.has(c));
     const diagHits=diagOnly.filter(visibleEnemyAt);
     const expanded=!!p.bonusRadarExpanded,advanced=!!p.bonusRadarAdvanced;
     let detected=per>0&&(orthHits.length>0||(expanded&&diagHits.length>0));
-    if(p.name==='Paranoia'&&per>0){
-      const realTargets=[];for(const c of orthHits){const e=this.#pieceAt(other,c);if(e&&!this.#isDruidHidden(e)&&!this.#isUndetectable(e))realTargets.push(e);}if(expanded)for(const c of diagHits){const e=this.#pieceAt(other,c);if(e&&!this.#isDruidHidden(e)&&!this.#isUndetectable(e))realTargets.push(e);}
-      this.#infectParanoia(p,[...new Map(realTargets.map(x=>[x.id,x])).values()]);
-    }
-    if(p.paranoia&&!p.paranoia.revealed){p.paranoia.revealed=true;this.#addIntel(side,'🧠 A percepção desta peça está sob efeito de Paranoia por 2 turnos.');}
-    const paranoid=!!p.paranoia?.revealed;
-    const fake=paranoid&&!detected&&per>0;
-    if(fake)detected=true;
+    const echo=this.#paranoiaEchoReady(p)&&per>0,echoKnown=!!(echo&&p.paranoiaEchoKnownFalse);if(echo){p.paranoiaEchoPending=false;p.paranoiaEchoReadyTurn=0;p.paranoiaEchoKnownFalse=false;detected=true;}
     a.lastPerception=detected;
     const hintable=c=>!this.#solidTerrain(c)&&!this.#pieceAt(side,c)&&!this.#baseAt(c);
-    const hints=[];
+    const hints=[];let echoCell=null;
     if(per>0){
       if(advanced&&orthHits.length){for(const c of orthHits)hints.push({coord:c,kind:'exact'});}
       else if(orthHits.length){for(const c of orthPossible.filter(hintable))hints.push({coord:c,kind:'orth'});}
       if(expanded&&diagHits.length){for(const c of diagPossible.filter(hintable))hints.push({coord:c,kind:'diag'});}
-      if(fake){
-        const pool=orthPossible.filter(hintable);const fakeCell=pool[Math.floor(Math.random()*Math.max(1,pool.length))];
-        if(fakeCell){if(advanced)hints.push({coord:fakeCell,kind:'exact'});else for(const c of orthPossible.filter(hintable))hints.push({coord:c,kind:'orth'});}
+      if(echo){
+        const pool=orthPossible.filter(hintable);echoCell=pool[Math.floor(Math.random()*Math.max(1,pool.length))]||null;
+        if(echoCell){if(advanced)hints.push({coord:echoCell,kind:'exact',knownFalse:echoKnown});else for(const c of orthPossible.filter(hintable))hints.push({coord:c,kind:'orth',knownFalse:echoKnown});}
       }
     }
-    this.#s.perceptionHints[side]=hints.filter((h,i,a)=>a.findIndex(x=>x.coord===h.coord&&x.kind===h.kind)===i);
+    this.#s.perceptionHints[side]=hints.filter((h,i,a)=>a.findIndex(x=>x.coord===h.coord&&x.kind===h.kind&&!!x.knownFalse===!!h.knownFalse)===i);
     let msg;
     if(per<=0)msg='◌ PER0: esta unidade não possui percepção.';
-    else if(fake)msg=advanced?'📡 presença ortogonal detectada em uma casa exata.':'⚠️ presença inimiga no alcance ortogonal.';
+    else if(echoKnown)msg=advanced?'🧠 Eco da Presença Fantasma: esta detecção é falsa e conhecida.':'🧠 Eco da Presença Fantasma: presença falsa conhecida no alcance ortogonal.';
+    else if(echo)msg=advanced&&echoCell?`📡 presença ortogonal em ${echoCell}`:'⚠️ presença inimiga no alcance ortogonal.';
     else if(advanced&&orthHits.length){msg=`📡 presença ortogonal em ${orthHits.join(', ')}`;if(expanded&&diagHits.length)msg+=' + 📶 presença diagonal no alcance';}
     else if(expanded){const parts=[];if(orthHits.length)parts.push('presença ortogonal no alcance');if(diagHits.length)parts.push('presença diagonal no alcance');msg=parts.length?`📶 ${parts.join(' e ')}`:`✓ nenhuma presença no alcance PER${per}`;}
     else msg=orthHits.length?'⚠️ presença inimiga no alcance ortogonal.':`✓ nenhuma presença inimiga no alcance PER${per}.`;
-    this.#addIntel(side,`${d.icon} ${d.name}: ${msg}`);
-    this.#noteReplay('perception',side,{piece:d.name,coord:p.coord,detected:!!detected,hints:(this.#s.perceptionHints[side]||[]).map(h=>({...h})),text:msg});
+    this.#addIntel(side,`${d.icon} ${d.name}: ${msg}`);if(echoKnown&&orthHits.length)this.#addIntel(side,'🧠 Eco da Presença Fantasma também disparou neste turno; a indicação extra é falsa e conhecida.');
+    this.#noteReplay('perception',side,{piece:d.name,coord:p.coord,detected:!!detected,hints:(this.#s.perceptionHints[side]||[]).map(h=>({...h})),knownFalse:echoKnown,text:msg});
     return this.#ok('Movimento encerrado. Agora ataque, use habilidade, sabote um Posto ou encerre.');
   }
 
@@ -583,7 +585,6 @@ __refRoot.GameReferee = class GameReferee {
     if(a.mode==='move'&&a.committed)return this.#fail('Primeiro termine ou pare o movimento.');
     const d=this.#R.defOf(p); if(d.a<=0&&!this.#isGhost(p))return this.#fail(`${d.name} tem ATQ0 e não possui ataque normal.`);
     a.moveRemaining=0;
-    if(p.name==='Piromante'){a.mode='pyro';a.pyroTargets=[];return this.#ok(`🔥 Escolha 1 ou 2 casas dentro do Alc. Hab. ${d.ah} e confirme o ataque.`,{attackMode:'pyro'});}
     a.mode='attack';return this.#ok(this.#isGhost(p)?'👻 Escolha uma casa em ALC para tentar possuir um inimigo.':'Escolha uma casa para atacar.');
   }
 
@@ -617,8 +618,8 @@ __refRoot.GameReferee = class GameReferee {
     const bad=this.#validateTurn(side);if(bad)return bad;
     const a=this.#activation(side),p=this.#activePiece(side);if(!a||!p||a.mode!=='pyro'||p.name!=='Piromante')return this.#fail('Ataque do Piromante não iniciado.');
     const targets=[...(a.pyroTargets||[])];if(targets.length<1||targets.length>2)return this.#fail('Escolha 1 ou 2 casas antes de confirmar.');
-    this.#commit(side);a.mode=null;a.pyroTargets=[];this.#noteReplay('attack',side,{piece:'Piromante',from:p.coord,cells:[...targets]});
-    this.#addHistory(side,`🔥 Piromante atacou ${targets.length} casa${targets.length===1?'':'s'} na mesma ação.`);
+    this.#commit(side);p.pyroCooldown=2;a.mode=null;a.pyroTargets=[];this.#noteReplay('ability',side,{piece:'Piromante',ability:'Rajada Dupla',from:p.coord,cells:[...targets],text:`Ataque de habilidade em ${targets.length} casa${targets.length===1?'':'s'}.`});
+    this.#addHistory(side,`🔥 Piromante usou Rajada Dupla em ${targets.length} casa${targets.length===1?'':'s'}.`);
     for(const c of targets)this.#hitAttack(side,p,c);
     return this.#finishActivation(side);
   }
@@ -628,7 +629,9 @@ __refRoot.GameReferee = class GameReferee {
     const a=this.#activation(side),p=this.#activePiece(side); if(!a||!p)return this.#fail('Selecione uma peça.');
     if(a.mode==='move'&&a.committed)return this.#fail('Primeiro termine o movimento.');
     const ab=this.#effectiveAbility(p),ah=this.#R.defOf(p).ah||0;
-    if(ab==='sureShot'){if((p.sureShotCooldown||0)>0)return this.#fail(`🏹 Tiro Certeiro em recarga por mais ${p.sureShotCooldown} turno.`);this.#commit(side);p.sureShotActive=true;p.sureShotCooldown=2;a.mode=null;this.#addHistory(side,'🏹 Arqueiro ativou Tiro Certeiro: Alcance de Ataque dobrado neste turno.');this.#noteReplay('ability',side,{piece:'Arqueiro',ability:'Tiro Certeiro',coord:p.coord,text:'Alcance de Ataque dobrado neste turno.'});return this.#ok('🏹 Tiro Certeiro ativo. O alcance de ataque está dobrado neste turno.',{ability:'sureShot'});}
+    if(ab==='sureShot'){if((p.sureShotCooldown||0)>0)return this.#fail(`🏹 Tiro Certeiro em recarga por mais ${p.sureShotCooldown} turno.`);a.mode='sureShotConfirm';return this.#ok('🏹 Confira a área marcada: o Tiro Certeiro dobrará o ALC do Arqueiro neste turno. Confirme para ativar.',{ability:'sureShot',confirm:true,cells:this.#sureShotPreviewCells(p)});}
+    if(ab==='pyroBurst'){if((p.pyroCooldown||0)>0)return this.#fail(`🔥 Rajada Dupla em recarga por mais ${p.pyroCooldown} turno${p.pyroCooldown===1?'':'s'}.`);a.mode='pyro';a.pyroTargets=[];return this.#ok(`🔥 Escolha 1 ou 2 casas diferentes dentro do Alc. Hab. ${ah} e confirme a Rajada Dupla.`,{ability:'pyroBurst'});}
+    if(ab==='phantomPresence'){a.mode='paranoiaPresence';a.paranoiaTargets=[];return this.#ok(`🧠 Escolha 2 casas dentro do Alc. Hab. ${ah} para criar Presenças Fantasmas. Você verá as presenças; o inimigo não.`,{ability:'phantomPresence'});}
     if(ab==='absorbRock'){const legal=this.#R.neighbors(p.coord,false).filter(c=>this.#rockAt(c));if(!legal.length)return this.#fail('🗿 Não há nenhuma pedra adjacente para consumir.');a.mode='absorbRock';return this.#ok('🗿 Escolha uma pedra adjacente para consumir.',{ability:'absorbRock'});}
     if(ab==='smoke'){if((p.ninjaSmokeCooldown||0)>0)return this.#fail(`🌫️ Bomba de Fumaça em recarga por mais ${p.ninjaSmokeCooldown} turno${p.ninjaSmokeCooldown===1?'':'s'}.`);this.#commit(side);p.ninjaSmokeRemaining=1;p.ninjaSmokeCooldown=3;this.#addHistory(side,'🌫️ Ninja lançou Bomba de Fumaça e ficará indetectável até o fim do próximo turno próprio.');this.#noteReplay('ability',side,{piece:this.#R.defOf(p).name,ability:'Bomba de Fumaça',coord:p.coord,text:'Indetectável até o fim do próximo turno próprio.'});const done=this.#finishActivation(side);return {...done,status:'🌫️ Bomba de Fumaça ativa: esta unidade não pode ser detectada até o fim do próximo turno próprio.'};}
     if(ab==='kamikaze'){a.mode='kamikaze';const cells=this.#R.blastCells(p.coord,ah||1);a.kamikazeCells=[...cells];return this.#ok(`💣 Autodestruição pronta. Alc. Hab. ${ah||1} atinge ${ah===1?'o primeiro anel':'os '+(ah||1)+' anéis'} ao redor. Confirme para explodir.`,{ability:'kamikaze',blastCells:cells});}
@@ -640,7 +643,7 @@ __refRoot.GameReferee = class GameReferee {
       a.mode='raise';return this.#ok(legal.length?`☠️ Escolha um cadáver dentro do Alc. Hab. ${ah}.`:`☠️ Alc. Hab. ${ah} marcado. Nenhum cadáver válido no alcance no momento.`,{ability:'raise'});
     }
     if(ab==='mirror'){a.mode='mirror';return this.#ok(`🪞 Escolha uma casa dentro do Alc. Hab. ${ah}. Diagonais entram naturalmente pelo custo de distância.`,{ability:'mirror'});}
-    if(ab==='awaken'){const legal=(this.#s.trees||[]).filter(t=>t.state==='live'&&this.#inAbilityRange(p,t.coord)&&!this.#piecesAt(side,t.coord).length&&!this.#pieceAt(this.#other(side),t.coord));a.mode='awaken';return this.#ok(legal.length?`🌿 Escolha uma árvore viva dentro do Alc. Hab. ${ah} para criar Galho-Vivo.`:`🌿 Alc. Hab. ${ah} marcado. Nenhuma árvore viva válida no alcance no momento.`,{ability:'awaken'});}
+    if(ab==='awaken'){const legal=(this.#s.trees||[]).filter(t=>t.state==='live'&&this.#inAbilityRange(p,t.coord)&&!this.#piecesAt(side,t.coord).length);a.mode='awaken';return this.#ok(legal.length?`🌿 Escolha uma árvore viva dentro do Alc. Hab. ${ah} para criar Galho-Vivo.`:`🌿 Alc. Hab. ${ah} marcado. Nenhuma árvore viva válida no alcance no momento.`,{ability:'awaken'});}
     if(ab==='spotTrap'){a.mode='spotTrap';return this.#ok(`🦉 Escolha uma casa dentro do Alc. Hab. ${ah} para colocar uma armadilha de revelação. Máximo 2.`,{ability:'spotTrap'});}
     if(ab==='damageTrap'){a.mode='damageTrap';return this.#ok(`🕳️ Escolha uma casa dentro do Alc. Hab. ${ah} para colocar a armadilha de dano.`,{ability:'damageTrap'});}
     if(ab==='bard'){a.mode='bard';return this.#ok(`🎵 Escolha 1 aliado dentro do Alc. Hab. ${ah}.`,{ability:'bard'});}
@@ -650,7 +653,29 @@ __refRoot.GameReferee = class GameReferee {
 
   #effectiveAbility(p){
     const name=p.name==='Doppelgänger'?p.copied:p.name;
-    if(name==='Arqueiro')return'sureShot';if(name==='Ninja')return'smoke';if(name==='Kamikaze')return'kamikaze';if(name==='Golem'&&!p.form)return'absorbRock';if(name==='Escudeiro')return'shieldLink';if(name==='Vidente')return'seer';if(name==='Necromante')return'raise';if(name==='Mago do Espelho')return'mirror';if(name==='Druida')return'awaken';if(name==='Sentinela')return'spotTrap';if(name==='Caçador')return'damageTrap';if(name==='Bardo')return'bard';return null;
+    if(name==='Arqueiro')return'sureShot';if(name==='Piromante')return'pyroBurst';if(name==='Paranoia')return'phantomPresence';if(name==='Ninja')return'smoke';if(name==='Kamikaze')return'kamikaze';if(name==='Golem')return'absorbRock';if(name==='Escudeiro')return'shieldLink';if(name==='Vidente')return'seer';if(name==='Necromante')return'raise';if(name==='Mago do Espelho')return'mirror';if(name==='Druida')return'awaken';if(name==='Sentinela')return'spotTrap';if(name==='Caçador')return'damageTrap';if(name==='Bardo')return'bard';return null;
+  }
+
+
+  #sureShotPreviewCells(p){const d=this.#R.defOf(p),range=Math.max(0,(d.range||0)*2);const out=[];for(let y=0;y<8;y++)for(let x=0;x<8;x++){const c=this.#R.coord(x,y);if(c!==p.coord&&this.#R.man(p.coord,c)<=range)out.push(c);}return out;}
+  #confirmSureShot(side){
+    const bad=this.#validateTurn(side);if(bad)return bad;const a=this.#activation(side),p=this.#activePiece(side);if(!a||!p||a.mode!=='sureShotConfirm'||this.#effectiveAbility(p)!=='sureShot')return this.#fail('Tiro Certeiro não está aguardando confirmação.');
+    if((p.sureShotCooldown||0)>0)return this.#fail('Tiro Certeiro está em recarga.');
+    this.#commit(side);p.sureShotActive=true;p.sureShotCooldown=2;a.mode=null;this.#addHistory(side,'🏹 Arqueiro ativou Tiro Certeiro: Alcance de Ataque dobrado neste turno.');this.#noteReplay('ability',side,{piece:'Arqueiro',ability:'Tiro Certeiro',coord:p.coord,cells:this.#R.attackCells(p),text:'Alcance de Ataque dobrado neste turno.'});return this.#ok('🏹 Tiro Certeiro ativo. Agora escolha Atacar para usar o alcance ampliado.',{ability:'sureShot'});
+  }
+  #selectParanoiaTarget(side,to){
+    const bad=this.#validateTurn(side);if(bad)return bad;const a=this.#activation(side),p=this.#activePiece(side);if(!a||!p||a.mode!=='paranoiaPresence'||this.#effectiveAbility(p)!=='phantomPresence')return this.#fail('Presença Fantasma não iniciada.');
+    if(!this.#inAbilityRange(p,to,true))return this.#fail(`Escolha casas dentro do Alc. Hab. ${this.#R.defOf(p).ah}.`);
+    if(this.#solidTerrain(to)||this.#baseAt(to))return this.#fail('Presenças Fantasmas não podem ser criadas sobre Árvores, Pedras ou Postos.');
+    a.paranoiaTargets=Array.isArray(a.paranoiaTargets)?a.paranoiaTargets:[];
+    if(a.paranoiaTargets.includes(to)){a.paranoiaTargets=a.paranoiaTargets.filter(c=>c!==to);return this.#ok('Casa removida.',{paranoiaTargets:[...a.paranoiaTargets]});}
+    if(a.paranoiaTargets.length>=2)return this.#fail('Escolha no máximo 2 casas.');
+    a.paranoiaTargets.push(to);return this.#ok(`${a.paranoiaTargets.length}/2 casas escolhidas.`,{paranoiaTargets:[...a.paranoiaTargets]});
+  }
+  #confirmParanoia(side){
+    const bad=this.#validateTurn(side);if(bad)return bad;const a=this.#activation(side),p=this.#activePiece(side);if(!a||!p||a.mode!=='paranoiaPresence'||this.#effectiveAbility(p)!=='phantomPresence')return this.#fail('Presença Fantasma não iniciada.');
+    const targets=[...new Set(a.paranoiaTargets||[])];if(targets.length!==2)return this.#fail('Escolha exatamente 2 casas antes de confirmar.');
+    this.#commit(side);for(const c of targets)this.#addFalsePresence(side,p,c);a.mode=null;a.paranoiaTargets=[];this.#addHistory(side,'🧠 Paranoia criou 2 Presenças Fantasmas invisíveis ao adversário.');this.#noteReplay('ability',side,{piece:'Paranoia',ability:'Presença Fantasma',coord:p.coord,cells:[...targets],text:'Duas presenças falsas foram criadas.'});return this.#finishActivation(side);
   }
 
 
@@ -717,34 +742,51 @@ __refRoot.GameReferee = class GameReferee {
     const bad=this.#validateTurn(side); if(bad)return bad;
     const a=this.#activation(side),p=this.#activePiece(side);if(!a||!p||a.mode!=='mirror')return this.#fail('Espelho não iniciado.');
     if(!this.#inAbilityRange(p,c)||this.#solidTerrain(c)||this.#pieceAt(side,c)||this.#mirrorAt(c,side)||this.#baseAt(c))return this.#fail('Casa inválida para o Espelho.');
-    if(this.#pieceAt(this.#other(side),c))return this.#fail('Não foi possível criar o Espelho nessa casa.');
     this.#commit(side);this.#s.mirrors=this.#s.mirrors.filter(m=>!(m.owner===side&&m.mageId===p.id));this.#s.mirrors.push({owner:side,coord:c,mageId:p.id});
     this.#addHistory(side,'🪞 Mago do Espelho criou um Espelho invisível para o adversário.');this.#addIntel(side,'🪞 Seu Espelho gera falsa presença e reflete o primeiro ataque que acertá-lo.');a.mode=null;return this.#finishActivation(side);
   }
 
   #awakenTree(side,c){
     const bad=this.#validateTurn(side);if(bad)return bad;const a=this.#activation(side),p=this.#activePiece(side);if(!a||!p||a.mode!=='awaken')return this.#fail('Despertar não iniciado.');
-    const tree=this.#treeAt(c);if(!tree||tree.state!=='live'||!this.#inAbilityRange(p,c)||this.#pieceAt(side,c)||this.#pieceAt(this.#other(side),c))return this.#fail('Árvore inválida para despertar.');
+    const tree=this.#treeAt(c);if(!tree||tree.state!=='live'||!this.#inAbilityRange(p,c)||this.#pieceAt(side,c))return this.#fail('Árvore inválida para despertar.');
     const existing=this.#pieces(side).find(x=>x.alive&&x.summonType==='livingBranch'&&x.druidId===p.id);if(existing)return this.#fail('Este Druida já controla um Galho-Vivo.');
-    this.#commit(side);this.#s.trees=this.#s.trees.filter(t=>t!==tree);const summon={id:(side==='player'?'p':'e')+this.#s.idSeq++,owner:side,name:'Galho-Vivo',hp:1,coord:c,alive:true,activated:true,original:false,summonType:'livingBranch',druidId:p.id,effects:[],bonusM:0,bonusV:0,bonusA:0,bonusRange:0,bonusAH:0,bonusRadarAdvanced:false,bonusRadarExpanded:false};this.#pieces(side).push(summon);this.#addHistory(side,'🌿 Druida deu vida a uma árvore: Galho-Vivo despertou.');a.mode=null;return this.#finishActivation(side);
+    this.#commit(side);this.#s.trees=this.#s.trees.filter(t=>t!==tree);const summon={id:(side==='player'?'p':'e')+this.#s.idSeq++,owner:side,name:'Galho-Vivo',hp:1,coord:c,alive:true,activated:true,original:false,summonType:'livingBranch',druidId:p.id,effects:[],bonusM:0,bonusV:0,bonusA:0,bonusRange:0,bonusAH:0,bonusRadarAdvanced:false,bonusRadarExpanded:false};this.#pieces(side).push(summon);const hostile=this.#pieceAt(this.#other(side),c);if(hostile)this.#resolveSpawnConflict(side,summon,hostile,c);else this.#addHistory(side,'🌿 Druida deu vida a uma árvore: Galho-Vivo despertou.');a.mode=null;return this.#finishActivation(side);
   }
   #placeTrap(side,c){
     const bad=this.#validateTurn(side);if(bad)return bad;const a=this.#activation(side),p=this.#activePiece(side);if(!a||!p||!['spotTrap','damageTrap'].includes(a.mode))return this.#fail('Armadilha não iniciada.');
-    if(!this.#inAbilityRange(p,c)||this.#solidTerrain(c)||this.#baseAt(c))return this.#fail('Casa inválida para a armadilha.');
+    if(!this.#inAbilityRange(p,c,true)||this.#solidTerrain(c)||this.#baseAt(c))return this.#fail('Casa inválida para a armadilha.');
     const kind=a.mode==='spotTrap'?'spot':'damage',limit=kind==='spot'?2:1;this.#commit(side);let arr=this.#s.traps[side];arr=arr.filter(t=>!(t.placerId===p.id&&t.coord===c));const owned=arr.filter(t=>t.placerId===p.id&&t.kind===kind).sort((x,y)=>x.seq-y.seq);while(owned.length>=limit){const old=owned.shift();arr=arr.filter(t=>t.id!==old.id);}arr.push({id:'t'+this.#s.idSeq++,owner:side,placerId:p.id,kind,coord:c,seq:this.#s.idSeq});this.#s.traps[side]=arr;this.#addHistory(side,kind==='spot'?'🦉 Sentinela preparou uma armadilha de revelação oculta.':'🕳️ Caçador preparou uma armadilha de dano oculta.');a.mode=null;return this.#finishActivation(side);
   }
   #absorbRock(side,c){
     const bad=this.#validateTurn(side);if(bad)return bad;const a=this.#activation(side),p=this.#activePiece(side);if(!a||!p||a.mode!=='absorbRock'||this.#effectiveAbility(p)!=='absorbRock')return this.#fail('Absorção de rocha não iniciada.');
     if(!this.#R.neighbors(p.coord,false).includes(c)||!this.#rockAt(c))return this.#fail('Escolha uma pedra adjacente.');
-    this.#commit(side);p.golemArmorExpireAfterTurn=(p.turnsTaken||0)+2;this.#s.rocks=this.#s.rocks.filter(x=>x!==c);if(this.#s.rockHp)delete this.#s.rockHp[c];this.#addHistory(side,'🛡️ Golem consumiu uma pedra e recebeu 1 de Armadura até o fim do próximo turno próprio.');this.#noteReplay('ability',side,{piece:'Golem',ability:'Absorver Rocha',coord:c,text:'1 de Armadura até o fim do próximo turno próprio.'});a.mode=null;return this.#finishActivation(side);
+    this.#commit(side);this.#s.rocks=this.#s.rocks.filter(x=>x!==c);if(this.#s.rockHp)delete this.#s.rockHp[c];if(p.form==='lava'){p.bonusM=(p.bonusM||0)+1;this.#addHistory(side,'🌋 Golem de Lava consumiu uma pedra e recebeu +1 M permanente.');this.#noteReplay('ability',side,{piece:'Golem de Lava',ability:'Absorver Rocha',coord:c,text:'+1 Movimento permanente.'});}else{p.golemArmorExpireAfterTurn=(p.turnsTaken||0)+2;this.#addHistory(side,'🛡️ Golem consumiu uma pedra e recebeu 1 de Armadura até o fim do próximo turno próprio.');this.#noteReplay('ability',side,{piece:'Golem',ability:'Absorver Rocha',coord:c,text:'1 de Armadura até o fim do próximo turno próprio.'});}a.mode=null;return this.#finishActivation(side);
   }
 
   #bardBuff(side,targetId,stat){
     const bad=this.#validateTurn(side);if(bad)return bad;const a=this.#activation(side),p=this.#activePiece(side);if(!a||!p||a.mode!=='bard')return this.#fail('Inspiração não iniciada.');const target=this.#pieceById(side,targetId);if(!target||target.id===p.id)return this.#fail('Escolha outro aliado vivo.');if(this.#R.man(p.coord,target.coord)>this.#R.defOf(p).ah)return this.#fail(`Aliado fora do Alc. Hab. ${this.#R.defOf(p).ah}.`);const map={attack:['ATQ','a'],range:['ALC','range'],abilityRange:['Alc. Hab.','ah'],move:['M','m'],life:['Vida','v']};if(!map[stat])return this.#fail('Bônus inválido.');
     this.#commit(side);this.#clearBardEffects(p.id,side);const [label,key]=map[stat],mods={[key]:1};target.effects=target.effects||[];target.effects.push({id:`bard-${p.id}`,name:`Inspiração +1 ${label}`,icon:'🎵',kind:'buff',public:true,sourceBardId:p.id,expireAfterSourceTurn:(p.turnsTaken||0)+2,modifiers:mods,remaining:1,tick:'bardTurn',tempLife:stat==='life'?1:0});if(stat==='life')target.hp+=1;this.#addHistory(side,`🎵 Bardo inspirou ${this.#R.defOf(target).name}: +1 ${label} até o fim do próximo turno do Bardo.`);a.mode=null;return this.#finishActivation(side);
   }
-  #infectParanoia(source,targets){
-    const other=this.#other(source.owner);let active=this.#pieces(other).filter(x=>x.paranoia?.sourceId===source.id&&x.paranoia.remaining>0).length;for(const t of targets){if(active>=2)break;if(t.paranoia?.sourceId===source.id)continue;t.paranoia={sourceId:source.id,remaining:2,revealed:false};active++;}
+  #falsePresenceAt(owner,c){return (this.#s.falsePresences?.[owner]||[]).find(f=>f.coord===c)||null;}
+  #addFalsePresence(side,source,c){
+    this.#s.falsePresences=this.#s.falsePresences||{player:[],enemy:[]};let arr=this.#s.falsePresences[side]||[];arr=arr.filter(f=>!(f.sourceId===source.id&&f.coord===c));const owned=arr.filter(f=>f.sourceId===source.id).sort((a,b)=>a.seq-b.seq);while(owned.length>=2){const old=owned.shift();arr=arr.filter(f=>f.id!==old.id);}arr.push({id:'fp'+this.#s.idSeq++,owner:side,sourceId:source.id,coord:c,seq:this.#s.idSeq++});this.#s.falsePresences[side]=arr;
+  }
+  #removeFalsePresence(owner,f){if(!f)return;this.#s.falsePresences[owner]=(this.#s.falsePresences?.[owner]||[]).filter(x=>x.id!==f.id);}
+  #paranoiaEchoReady(p){return !!(p?.paranoiaEchoPending&&Number(p.turnsTaken||0)>=Number(p.paranoiaEchoReadyTurn||0));}
+  #markParanoiaEcho(p,knownFalse=false){if(p?.alive){p.paranoiaEchoPending=true;p.paranoiaEchoKnownFalse=!!knownFalse;p.paranoiaEchoReadyTurn=(p.turnsTaken||0)+1;}}
+  #resolveFalsePresenceConfrontation(side,p,fake,from,to){
+    const owner=fake.owner;this.#removeFalsePresence(owner,fake);this.#markParanoiaEcho(p,true);const a=this.#activation(side);if(a){a.mode=null;a.moveRemaining=0;}for(const s of ['player','enemy'])this.#s.combatMarks[s]=[...new Set([...(this.#s.combatMarks[s]||[]),to])];this.#s.combatHold[side]=true;this.#noteReplay('combat',side,{coord:to,attacker:this.#R.defOf(p).name,defender:'Presença Fantasma',falsePresence:true});this.#addHistory(side,`🧠 ${this.#R.defOf(p).name} entrou em Confronto Direto com uma Presença Fantasma. Ela desapareceu; no próximo turno desta peça haverá uma detecção falsa conhecida.`);this.#addHistory(owner,'🧠 Uma de suas Presenças Fantasmas foi encontrada em Confronto Direto.');return this.#finishActivation(side);
+  }
+  #triggerParanoiaEchoWithoutMove(side,p){
+    if(!this.#paranoiaEchoReady(p))return;
+    const per=Math.max(0,this.#R.defOf(p).per||0),knownFalse=!!p.paranoiaEchoKnownFalse;
+    p.paranoiaEchoPending=false;p.paranoiaEchoReadyTurn=0;p.paranoiaEchoKnownFalse=false;
+    const a=this.#activation(side),orth=this.#R.perceptionCells(p.coord,per,false),pool=orth.filter(c=>!this.#solidTerrain(c)&&!this.#pieceAt(side,c)&&!this.#baseAt(c));
+    const advanced=!!p.bonusRadarAdvanced,cell=pool[Math.floor(Math.random()*Math.max(1,pool.length))];
+    if(cell){this.#s.perceptionHints[side]=advanced?[{coord:cell,kind:'exact',knownFalse}]:pool.map(c=>({coord:c,kind:'orth',knownFalse}));if(a)a.lastPerception=true;}
+    const text=knownFalse?'Eco da Presença Fantasma: detecção falsa conhecida.':(advanced&&cell?`presença ortogonal em ${cell}`:'presença inimiga no alcance ortogonal.');
+    this.#addIntel(side,knownFalse?'🧠 Eco da Presença Fantasma: esta detecção é falsa e conhecida.':`${this.#R.defOf(p).icon} ${this.#R.defOf(p).name}: ${advanced&&cell?'📡 '+text:'⚠️ '+text}`);
+    this.#noteReplay('perception',side,{piece:this.#R.defOf(p).name,coord:p.coord,detected:true,hints:(this.#s.perceptionHints[side]||[]).map(h=>({...h})),knownFalse,text});
   }
   #triggerTraps(moverSide,p,to){
     const enemy=this.#other(moverSide),hits=(this.#s.traps?.[enemy]||[]).filter(t=>t.coord===to);if(!hits.length)return false;let any=false;
@@ -756,7 +798,7 @@ __refRoot.GameReferee = class GameReferee {
     this.#clearShieldLinks(target);
     ghost.possession={hostSide:targetSide,hostId:target.id,hostSnapshot:structuredClone(target),ghostState:{name:'Fantasma',form:ghost.form||null,copied:ghost.copied||null,bonusM:ghost.bonusM||0,bonusV:ghost.bonusV||0,bonusA:ghost.bonusA||0,bonusRange:ghost.bonusRange||0,bonusAH:ghost.bonusAH||0,effects:structuredClone(ghost.effects||[])}};
     target.alive=false;target.possessedBy=ghost.id;target.coord=null;
-    ghost.name=target.name;ghost.form=target.form||null;ghost.copied=target.copied||null;ghost.hp=target.hp;ghost.coord=coord;ghost.bonusM=target.bonusM||0;ghost.bonusV=target.bonusV||0;ghost.bonusA=target.bonusA||0;ghost.bonusRange=target.bonusRange||0;ghost.bonusAH=target.bonusAH||0;ghost.bonusPer=target.bonusPer||0;ghost.bonusRadarAdvanced=!!target.bonusRadarAdvanced;ghost.bonusRadarExpanded=!!target.bonusRadarExpanded;ghost.golemArmorExpireAfterTurn=target.golemArmorExpireAfterTurn||0;ghost.sureShotCooldown=target.sureShotCooldown||0;ghost.sureShotActive=!!target.sureShotActive;ghost.ninjaSmokeCooldown=target.ninjaSmokeCooldown||0;ghost.ninjaSmokeRemaining=target.ninjaSmokeRemaining||0;ghost.mirrorCooldown=target.mirrorCooldown||0;ghost.turnsTaken=target.turnsTaken||0;ghost.effects=structuredClone(target.effects||[]);
+    ghost.name=target.name;ghost.form=target.form||null;ghost.copied=target.copied||null;ghost.hp=target.hp;ghost.coord=coord;ghost.bonusM=target.bonusM||0;ghost.bonusV=target.bonusV||0;ghost.bonusA=target.bonusA||0;ghost.bonusRange=target.bonusRange||0;ghost.bonusAH=target.bonusAH||0;ghost.bonusPer=target.bonusPer||0;ghost.bonusRadarAdvanced=!!target.bonusRadarAdvanced;ghost.bonusRadarExpanded=!!target.bonusRadarExpanded;ghost.golemArmorExpireAfterTurn=target.golemArmorExpireAfterTurn||0;ghost.sureShotCooldown=target.sureShotCooldown||0;ghost.sureShotActive=!!target.sureShotActive;ghost.paranoiaEchoPending=!!target.paranoiaEchoPending;ghost.paranoiaEchoKnownFalse=!!target.paranoiaEchoKnownFalse;ghost.paranoiaEchoReadyTurn=target.paranoiaEchoReadyTurn||0;ghost.ninjaSmokeCooldown=target.ninjaSmokeCooldown||0;ghost.ninjaSmokeRemaining=target.ninjaSmokeRemaining||0;ghost.mirrorCooldown=target.mirrorCooldown||0;ghost.turnsTaken=target.turnsTaken||0;ghost.effects=structuredClone(target.effects||[]);
     const others=this.#piecesAt(targetSide,coord).filter(x=>x.id!==target.id);for(const ally of others){const dest=this.#R.neighbors(coord,false).find(c=>!this.#solidTerrain(c)&&!this.#baseAt(c)&&!this.#pieceAt(targetSide,c)&&!this.#pieceAt(side,c));if(dest)ally.coord=dest;}
     return true;
   }
@@ -767,14 +809,25 @@ __refRoot.GameReferee = class GameReferee {
 
   #sabotageBase(side,baseId,bonusId,targetPieceId=null){
     const bad=this.#validateTurn(side);if(bad)return bad;const a=this.#activation(side),p=this.#activePiece(side);if(!a||!p)return this.#fail('Selecione uma peça para sabotar o Posto.');if(a.mode)return this.#fail('Cancele ou termine a ação atual antes de sabotar.');const base=this.#baseById(baseId);if(!base||base.owner===side)return this.#fail('Escolha um Posto inimigo.');if(base.sabotaged)return this.#fail('Esse Posto já foi sabotado.');if(!this.#R.neighbors(base.coord,true).includes(p.coord))return this.#fail('Para sabotar, a peça precisa estar em uma das 8 casas ao redor do Posto.');const bonus=this.#R.baseBonuses.find(b=>b.id===bonusId);if(!bonus)return this.#fail('Benefício inválido.');if(this.#hasBaseBonus(side,bonusId))return this.#fail('Esse benefício já foi escolhido nesta partida.');
-    let target=null;if(['radarAdvanced','radarExpanded','move','life','attack','range','abilityRange'].includes(bonusId)){target=this.#pieceById(side,targetPieceId);if(!target)return this.#fail('Escolha uma unidade aliada viva para receber o benefício.');if(bonusId==='range'&&this.#R.defOf(target).a<=0)return this.#fail('Mira só pode ser aplicada a um personagem que já possua ataque normal.');if(bonusId==='abilityRange'&&this.#R.defOf(target).ah<=0)return this.#fail('Canalização só pode ser aplicada a uma habilidade que use Alc. Hab.');}
+    let target=null;if(['radarAdvanced','radarExpanded','move','life','attack','range','abilityRange'].includes(bonusId)){target=this.#pieceById(side,targetPieceId);if(!target)return this.#fail('Escolha uma unidade aliada viva para receber o benefício.');if(bonusId==='range'&&this.#R.defOf(target).a<=0)return this.#fail('Mira só pode ser aplicada a um personagem que já possua ataque normal.');if(bonusId==='abilityRange'&&this.#R.defOf(target).ah<=0)return this.#fail('Alc. Hab. só pode ser aplicado a uma habilidade que use Alc. Hab.');}
     this.#commit(side);base.sabotaged=true;this.#s.chosenBaseBonuses[side].push(bonusId);if(target){if(bonusId==='move')target.bonusM=(target.bonusM||0)+1;if(bonusId==='life'){target.bonusV=(target.bonusV||0)+1;target.hp+=1;}if(bonusId==='attack')target.bonusA=(target.bonusA||0)+1;if(bonusId==='range')target.bonusRange=(target.bonusRange||0)+1;if(bonusId==='abilityRange')target.bonusAH=(target.bonusAH||0)+1;if(bonusId==='radarAdvanced')target.bonusRadarAdvanced=true;if(bonusId==='radarExpanded')target.bonusRadarExpanded=true;}
     const detail=target?`${bonus.icon} ${bonus.name} em ${this.#R.defOf(target).name}`:`${bonus.icon} ${bonus.name}`;this.#addHistory(side,`🏰 Posto inimigo sabotado. Benefício escolhido: ${detail}.`);this.#addHistory(this.#other(side),'🏚️ Um dos seus Postos de Operação foi sabotado.');if(this.#siegeActive()){const msg='👁️ Cerco Final: todos os Postos foram sabotados. A borda externa do tabuleiro agora revela permanentemente qualquer unidade para os dois lados.';this.#addHistory('player',msg);this.#addHistory('enemy',msg);}a.mode=null;return this.#finishActivation(side);
   }
 
+  #surrender(side){
+    if(this.#s.phase!=='play')return this.#fail('A partida ainda não começou.');
+    if(this.#s.mode==='training')return this.#fail('O Treino não possui desistência.');
+    if(this.#s.gameOver)return this.#fail('A partida já terminou.');
+    const other=this.#other(side);this.#s.gameOver=true;this.#s.result=other;this.#s.surrenderedBy=side;this.#s.activation={player:null,enemy:null};this.#s.pendingCombat=null;this.#s.doppelChoice={player:null,enemy:null};
+    this.#addHistory(side,'🏳️ Você desistiu da partida.');this.#addHistory(other,'🏆 O adversário desistiu da partida.');this.#noteReplay('surrender',side,{side,text:'Desistência'});
+    return this.#ok('Você desistiu da partida.',{gameOver:true,surrendered:true});
+  }
+
   #endActivationRequest(side){
     const bad=this.#validateTurn(side); if(bad)return bad;
-    const p=this.#activePiece(side);if(!p)return this.#fail('Selecione uma peça.');this.#commit(side);return this.#finishActivation(side);
+    const p=this.#activePiece(side);if(!p)return this.#fail('Selecione uma peça.');
+    const a=this.#activation(side);if(a?.mode==='move'&&this.#R.defOf(p)?.flying&&this.#solidTerrain(p.coord))return this.#fail('Voador precisa sair da Árvore ou Pedra antes de encerrar o turno.');
+    this.#commit(side);return this.#finishActivation(side);
   }
 
   #createCorpse(p){if(!p.original||p.name==='Slime'||p.possessedBy)return;if(!this.#s.corpses.some(c=>c.sourceId===p.id))this.#s.corpses.push({sourceId:p.id,coord:p.coord,name:p.identity||p.name,owner:p.owner});}
@@ -823,7 +876,7 @@ __refRoot.GameReferee = class GameReferee {
   #hitAttack(side,attacker,to){
     const other=this.#other(side),d=this.#R.defOf(attacker),mir=this.#mirrorAt(to,other);
     if(mir){this.#s.mirrors=this.#s.mirrors.filter(m=>m!==mir);const res=this.#damage(attacker,d.a);this.#addHistory(side,`🪞 O ataque do seu ${d.name} foi refletido por um Espelho.${res.dead?' Seu atacante morreu.':res.possessionBroken?' A possessão foi quebrada.':''}`);this.#addHistory(other,`🪞 Seu Espelho refletiu um ataque.${res.dead?' O atacante inimigo morreu.':''}`);this.#resolveSlimeSplits();return;}
-    const friendly=this.#protectedTarget(side,to),hostile=this.#protectedTarget(other,to),target=friendly||hostile,dist=this.#R.man(attacker.coord,to);if(!target&&this.#damageTerrain(to,d.a,side,d.name)){this.#s.impact[other]=to;return;}if(!target){this.#addHistory(side,`${d.icon} ${d.name} atacou, mas não atingiu ninguém.`);this.#addIntel(other,'💥 Ataque inimigo detectado: a casa atingida foi marcada no tabuleiro.');this.#s.impact[other]=to;return;}
+    const friendly=this.#protectedTarget(side,to),hostile=this.#protectedTarget(other,to),target=friendly||hostile,dist=this.#R.man(attacker.coord,to);if(!target&&this.#damageTerrain(to,d.a,side,d.name)){this.#s.impact[other]=to;return;}if(!target){const fake=this.#falsePresenceAt(other,to);if(fake){this.#removeFalsePresence(other,fake);this.#markParanoiaEcho(attacker,false);this.#addHistory(side,`⚔️ Paranoia inimigo foi atingido por ${d.name}.`);this.#addHistory(other,'🧠 Uma de suas Presenças Fantasmas foi destruída por um ataque; o adversário acredita ter atingido Paranoia.');this.#s.impact[other]=to;return;}this.#addHistory(side,`${d.icon} ${d.name} atacou, mas não atingiu ninguém.`);this.#addIntel(other,'💥 Ataque inimigo detectado: a casa atingida foi marcada no tabuleiro.');this.#s.impact[other]=to;return;}
     const targetSide=target.owner,stacked=this.#piecesAt(targetSide,to).length>1&&target.name==='Escudeiro';const before=this.#R.defOf(target).name,res=this.#damage(target,d.a),friendlyFire=targetSide===side,slimeSplit=target.name==='Slime'&&target.original&&res.dead;
     if(res.possessionBroken){this.#addHistory(side,`👻 O golpe expulsou o Fantasma de ${res.hostName}; a peça foi recuperada pelo dono original.`);this.#addHistory(targetSide,`👻 ${res.hostName} foi recuperado após a morte do Fantasma.`);this.#s.impact[targetSide]=to;return;}
     if(res.zombieDown){this.#addHistory(side,`🧟 ${before} caiu, mas ainda não conta como eliminação.`);this.#addHistory(targetSide,`🧟 Seu Zumbi caiu e tentará voltar.`);return;}
@@ -902,7 +955,7 @@ __refRoot.GameReferee = class GameReferee {
   }
 
   #finishActivation(side){
-    const hadActivation=!!this.#activation(side),p=this.#activePiece(side);if(this.#s.mode!=='training'&&hadActivation)this.#s.roundActivations[side]=(this.#s.roundActivations?.[side]||0)+1;if(p&&p.alive){if(p.name==='Arqueiro'||p.identity==='Arqueiro'){p.sureShotActive=false;if((p.sureShotCooldown||0)>0)p.sureShotCooldown--;}if((p.ninjaSmokeCooldown||0)>0)p.ninjaSmokeCooldown--;if((p.ninjaSmokeRemaining||0)>0&&p.ninjaSmokeCooldown<2)p.ninjaSmokeRemaining--;p.activated=this.#s.mode==='training'?false:true;this.#tickPieceEffects(p,'turn');if(p.name==='Bardo'||p.identity==='Bardo')this.#expireBardAfterTurn(p);else p.turnsTaken=(p.turnsTaken||0)+1;if((p.golemArmorExpireAfterTurn||0)>0&&(p.turnsTaken||0)>=p.golemArmorExpireAfterTurn){p.golemArmorExpireAfterTurn=0;this.#addHistory(side,'🛡️ A Armadura do Golem terminou.');}if(p.paranoia?.revealed){p.paranoia.remaining--;if(p.paranoia.remaining<=0){p.paranoia=null;this.#addIntel(side,'🧠 O efeito de Paranoia terminou.');}}if(p.name==='Zumbi'&&p.zombieTurnsLeft>0){p.zombieTurnsLeft--;if(p.zombieTurnsLeft<=0){this.#addHistory(side,'🧟 Os 3 turnos do Zumbi terminaram; ele caiu definitivamente.');this.#kill(p,true);}}}
+    const active=this.#activation(side),hadActivation=!!active,p=this.#activePiece(side);if(p&&this.#paranoiaEchoReady(p)&&!active?.movementUsed)this.#triggerParanoiaEchoWithoutMove(side,p);if(this.#s.mode!=='training'&&hadActivation)this.#s.roundActivations[side]=(this.#s.roundActivations?.[side]||0)+1;if(p&&p.alive){if(p.name==='Arqueiro'||p.identity==='Arqueiro'){p.sureShotActive=false;if((p.sureShotCooldown||0)>0)p.sureShotCooldown--;}if((p.pyroCooldown||0)>0)p.pyroCooldown--;if((p.ninjaSmokeCooldown||0)>0)p.ninjaSmokeCooldown--;if((p.ninjaSmokeRemaining||0)>0&&p.ninjaSmokeCooldown<2)p.ninjaSmokeRemaining--;p.activated=this.#s.mode==='training'?false:true;this.#tickPieceEffects(p,'turn');if(p.name==='Bardo'||p.identity==='Bardo')this.#expireBardAfterTurn(p);else p.turnsTaken=(p.turnsTaken||0)+1;if((p.golemArmorExpireAfterTurn||0)>0&&(p.turnsTaken||0)>=p.golemArmorExpireAfterTurn){p.golemArmorExpireAfterTurn=0;this.#addHistory(side,'🛡️ A Armadura do Golem terminou.');}if(p.name==='Zumbi'&&p.zombieTurnsLeft>0){p.zombieTurnsLeft--;if(p.zombieTurnsLeft<=0){this.#addHistory(side,'🧟 Os 3 turnos do Zumbi terminaram; ele caiu definitivamente.');this.#kill(p,true);}}}
     this.#s.activation[side]=null;this.#s.impact[side]=null;if(this.#s.combatHold?.[side])this.#s.combatHold[side]=false;else if(this.#s.combatMarks)this.#s.combatMarks[side]=[];if(this.#s.mode==='training'){this.#s.turn=side;return this.#ok('Ação de treino encerrada. Você pode usar qualquer peça novamente.',{training:true});}if(this.#checkEnd())return this.#ok('Partida encerrada.',{gameOver:true});this.#advanceAfterActivation(side);return this.#ok('Turno encerrado.',{turn:this.#s.turn});
   }
 
@@ -923,28 +976,29 @@ __refRoot.GameReferee = class GameReferee {
   exportState(){
     return JSON.stringify(this.#s,(k,v)=>v instanceof Set?{__set:[...v]}:v);
   }
-  importState(raw){
-    if(!raw)return;this.#s=JSON.parse(raw,(k,v)=>v&&typeof v==='object'&&Array.isArray(v.__set)?new Set(v.__set):v);if(!this.#s.doppelChoice)this.#s.doppelChoice={player:null,enemy:null};if(!this.#s.matchConfig)this.#s.matchConfig={teamSize:{player:4,enemy:4},lossLimit:{player:3,enemy:3}};if(!this.#s.roundStarter)this.#s.roundStarter='player';if(!this.#s.roundActivations)this.#s.roundActivations={player:0,enemy:0};if(!this.#s.trees)this.#s.trees=[{coord:'B3',state:'live',hp:3},{coord:'G6',state:'live',hp:3}];for(const tr of this.#s.trees)if(tr.hp==null)tr.hp=tr.state==='live'?3:0;if(!this.#s.rocks)this.#s.rocks=['F2','C7'];if(!this.#s.rockHp)this.#s.rockHp=Object.fromEntries((this.#s.rocks||[]).map(c=>[c,3]));if(!this.#s.water)this.#s.water=['D3','E6'];if(!this.#s.swamps)this.#s.swamps=['C5','F4'];if(!this.#s.traps)this.#s.traps={player:[],enemy:[]};if(!this.#s.spotReveals)this.#s.spotReveals={player:{},enemy:{}};if(!this.#s.combatMarks)this.#s.combatMarks={player:[],enemy:[]};if(!this.#s.combatHold)this.#s.combatHold={player:false,enemy:false};if(this.#s.replayEvent===undefined)this.#s.replayEvent=null;for(const side of ['player','enemy'])for(const p of this.#pieces(side)){if(p.name==='Coringa')p.name='Trapaceiro';if(p.identity==='Coringa')p.identity='Trapaceiro';if(!Array.isArray(p.effects))p.effects=[];if(p.bonusAH==null)p.bonusAH=0;if(p.turnsTaken==null)p.turnsTaken=0;if(p.linkedToId===undefined)p.linkedToId=null;if(p.sureShotCooldown==null)p.sureShotCooldown=0;if(p.sureShotActive==null)p.sureShotActive=false;if(p.golemArmorExpireAfterTurn==null)p.golemArmorExpireAfterTurn=0;p.golemAbsorbStat=null;if(p.ninjaSmokeCooldown==null)p.ninjaSmokeCooldown=0;if(p.ninjaSmokeRemaining==null)p.ninjaSmokeRemaining=0;}
+  importState(raw){ this.#importState(raw); }
+  #importState(raw){
+    if(!raw)return;this.#s=JSON.parse(raw,(k,v)=>v&&typeof v==='object'&&Array.isArray(v.__set)?new Set(v.__set):v);if(!this.#s.doppelChoice)this.#s.doppelChoice={player:null,enemy:null};if(!this.#s.matchConfig)this.#s.matchConfig={teamSize:{player:4,enemy:4},lossLimit:{player:3,enemy:3}};if(!this.#s.roundStarter)this.#s.roundStarter='player';if(!this.#s.roundActivations)this.#s.roundActivations={player:0,enemy:0};if(!this.#s.trees)this.#s.trees=[{coord:'B3',state:'live',hp:3},{coord:'G6',state:'live',hp:3}];for(const tr of this.#s.trees)if(tr.hp==null)tr.hp=tr.state==='live'?3:0;if(!this.#s.rocks)this.#s.rocks=['F2','C7'];if(!this.#s.rockHp)this.#s.rockHp=Object.fromEntries((this.#s.rocks||[]).map(c=>[c,3]));if(!this.#s.water)this.#s.water=['D3','E6'];if(!this.#s.swamps)this.#s.swamps=['C5','F4'];if(!this.#s.traps)this.#s.traps={player:[],enemy:[]};if(!this.#s.falsePresences)this.#s.falsePresences={player:[],enemy:[]};if(!this.#s.spotReveals)this.#s.spotReveals={player:{},enemy:{}};if(!this.#s.combatMarks)this.#s.combatMarks={player:[],enemy:[]};if(!this.#s.combatHold)this.#s.combatHold={player:false,enemy:false};if(this.#s.replayEvent===undefined)this.#s.replayEvent=null;if(this.#s.surrenderedBy===undefined)this.#s.surrenderedBy=null;for(const side of ['player','enemy'])for(const p of this.#pieces(side)){if(p.name==='Coringa')p.name='Trapaceiro';if(p.identity==='Coringa')p.identity='Trapaceiro';if(!Array.isArray(p.effects))p.effects=[];if(p.bonusAH==null)p.bonusAH=0;if(p.turnsTaken==null)p.turnsTaken=0;if(p.linkedToId===undefined)p.linkedToId=null;if(p.sureShotCooldown==null)p.sureShotCooldown=0;if(p.sureShotActive==null)p.sureShotActive=false;if(p.pyroCooldown==null)p.pyroCooldown=0;if(p.paranoiaEchoPending==null)p.paranoiaEchoPending=false;if(p.paranoiaEchoKnownFalse==null)p.paranoiaEchoKnownFalse=false;if(p.paranoiaEchoReadyTurn==null)p.paranoiaEchoReadyTurn=0;p.paranoia=null;if(p.golemArmorExpireAfterTurn==null)p.golemArmorExpireAfterTurn=0;p.golemAbsorbStat=null;if(p.ninjaSmokeCooldown==null)p.ninjaSmokeCooldown=0;if(p.ninjaSmokeRemaining==null)p.ninjaSmokeRemaining=0;}
   }
 
 };
 
-if(typeof module!=='undefined'&&module.exports) module.exports=__refRoot.GameReferee;
-
 
 const actionMap={
-  selectPiece:(c,a)=>c.selectPiece(a.pieceId),cancelSelection:c=>c.cancelSelection(),cancelMode:c=>c.cancelMode(),startMove:c=>c.startMove(),moveStep:(c,a)=>c.moveStep(a.to),stopMove:c=>c.stopMove(),startAttack:c=>c.startAttack(),attack:(c,a)=>c.attack(a.to),selectPyroTarget:(c,a)=>c.selectPyroTarget(a.to),confirmPyroAttack:c=>c.confirmPyroAttack(),startAbility:c=>c.startAbility(),confirmKamikaze:c=>c.confirmKamikaze(),useSeer:(c,a)=>c.useSeer(a.cells),raiseAt:(c,a)=>c.raiseAt(a.coord),placeMirror:(c,a)=>c.placeMirror(a.coord),awakenTree:(c,a)=>c.awakenTree(a.coord),placeTrap:(c,a)=>c.placeTrap(a.coord),bardBuff:(c,a)=>c.bardBuff(a.targetPieceId,a.stat),absorbRock:(c,a)=>c.absorbRock(a.coord),shieldLink:(c,a)=>c.shieldLink(a.targetPieceId||null),endActivation:c=>c.endActivation(),chooseCombatPosition:(c,a)=>c.chooseCombatPosition(!!a.advance),sabotageBase:(c,a)=>c.sabotageBase(a.baseId,a.bonusId,a.targetPieceId||null),chooseDoppelCopy:(c,a)=>c.chooseDoppelCopy(!!a.copyNew)
+  surrender:c=>c.surrender(),selectPiece:(c,a)=>c.selectPiece(a.pieceId),cancelSelection:c=>c.cancelSelection(),cancelMode:c=>c.cancelMode(),startMove:c=>c.startMove(),moveStep:(c,a)=>c.moveStep(a.to),stopMove:c=>c.stopMove(),startAttack:c=>c.startAttack(),attack:(c,a)=>c.attack(a.to),selectPyroTarget:(c,a)=>c.selectPyroTarget(a.to),confirmPyroAttack:c=>c.confirmPyroAttack(),confirmSureShot:c=>c.confirmSureShot(),selectParanoiaTarget:(c,a)=>c.selectParanoiaTarget(a.to),confirmParanoia:c=>c.confirmParanoia(),startAbility:c=>c.startAbility(),confirmKamikaze:c=>c.confirmKamikaze(),useSeer:(c,a)=>c.useSeer(a.cells),raiseAt:(c,a)=>c.raiseAt(a.coord),placeMirror:(c,a)=>c.placeMirror(a.coord),awakenTree:(c,a)=>c.awakenTree(a.coord),placeTrap:(c,a)=>c.placeTrap(a.coord),bardBuff:(c,a)=>c.bardBuff(a.targetPieceId,a.stat),absorbRock:(c,a)=>c.absorbRock(a.coord),shieldLink:(c,a)=>c.shieldLink(a.targetPieceId||null),endActivation:c=>c.endActivation(),chooseCombatPosition:(c,a)=>c.chooseCombatPosition(!!a.advance),sabotageBase:(c,a)=>c.sabotageBase(a.baseId,a.bonusId,a.targetPieceId||null),chooseDoppelCopy:(c,a)=>c.chooseDoppelCopy(!!a.copyNew)
 };
 
 export class GameRoom {
   constructor(ctx,env){
-    this.ctx=ctx;this.env=env;this.referee=new globalThis.GameReferee();this.ready={player:null,enemy:null};this.started=false;this.matchConfig={teamSize:{player:4,enemy:4},lossLimit:{player:3,enemy:3}};
+    this.ctx=ctx;this.env=env;this.referee=new globalThis.GameReferee();this.ready={player:null,enemy:null};this.started=false;this.matchConfig={teamSize:{player:4,enemy:4},lossLimit:{player:3,enemy:3}};this.replayInitialState=null;this.replayActions=[];
     ctx.blockConcurrencyWhile(async()=>{
       const saved=await ctx.storage.get('room');
-      if(saved){this.ready=saved.ready||{player:null,enemy:null};this.started=!!saved.started;this.matchConfig=saved.matchConfig||{teamSize:{player:4,enemy:4},lossLimit:{player:3,enemy:3}};if(saved.gameState)this.referee.importState(saved.gameState);}
+      if(saved){this.ready=saved.ready||{player:null,enemy:null};this.started=!!saved.started;this.matchConfig=saved.matchConfig||{teamSize:{player:4,enemy:4},lossLimit:{player:3,enemy:3}};this.replayInitialState=saved.replayInitialState||null;this.replayActions=Array.isArray(saved.replayActions)?saved.replayActions:[];if(saved.gameState)this.referee.importState(saved.gameState);}
     });
   }
-  async persist(){await this.ctx.storage.put('room',{ready:this.ready,started:this.started,matchConfig:this.matchConfig,gameState:this.referee.exportState()});}
+  resetReplay(){try{this.replayInitialState=this.referee.exportState();this.replayActions=[];}catch(e){console.error('Falha ao iniciar Replay do Clássico Online:',e);this.replayInitialState=null;this.replayActions=[];}}
+  recordReplayAction(side,action){try{if(!['player','enemy'].includes(side)||!action)return false;const copy=typeof structuredClone==='function'?structuredClone(action):JSON.parse(JSON.stringify(action));this.replayActions.push({side,action:copy});return true;}catch(e){console.error('Falha ao registrar ação no Replay do Clássico Online:',e);return false;}}
+  async persist(){await this.ctx.storage.put('room',{ready:this.ready,started:this.started,matchConfig:this.matchConfig,gameState:this.referee.exportState(),replayInitialState:this.replayInitialState,replayActions:this.replayActions});}
   async safePersist(){try{await this.persist();return true;}catch(e){console.error('Falha ao persistir sala Clássico Online:',e);return false;}}
   send(ws,obj){try{ws.send(JSON.stringify(obj));}catch{}}
   sockets(){return this.ctx.getWebSockets();}
@@ -953,7 +1007,7 @@ export class GameRoom {
   roomState(){return {type:'roomState',started:this.started,connected:{player:!!this.sideSocket('player'),enemy:!!this.sideSocket('enemy')},ready:{player:!!this.ready.player,enemy:!!this.ready.enemy},matchConfig:this.matchConfig};}
   broadcast(obj){for(const ws of this.sockets())this.send(ws,obj);}
   broadcastRoomState(){this.broadcast(this.roomState());}
-  broadcastViews(){if(!this.started)return;for(const side of ['player','enemy']){const ws=this.sideSocket(side);if(ws)this.send(ws,{type:'view',view:this.referee.createClient(side).getView()});}}
+  broadcastViews(){if(!this.started)return;for(const side of ['player','enemy']){const ws=this.sideSocket(side);if(!ws)continue;let view;try{view=this.referee.createClient(side).getView();this.send(ws,{type:'view',view});}catch(e){console.error('Falha ao gerar visão do Clássico Online para '+side+':',e);continue;}if(view.gameOver&&this.replayInitialState){try{this.send(ws,{type:'classicReplay',initialState:this.replayInitialState,actions:this.replayActions});}catch(e){console.error('Falha ao enviar Replay do Clássico Online:',e);}}}}
   async fetch(request){
     if(request.headers.get('Upgrade')!=='websocket')return new Response('WebSocket required',{status:426});
     const pair=new WebSocketPair();const client=pair[0],server=pair[1];
@@ -983,14 +1037,14 @@ export class GameRoom {
       if(this.started)return this.send(ws,{type:'result',ok:false,status:'A partida já começou.'});
       const res=this.referee.validateSetup(side,msg.setup,msg.bases,this.matchConfig.teamSize[side]);if(!res.ok)return this.send(ws,{type:'result',ok:false,status:res.status});
       this.ready[side]={setup:msg.setup,bases:msg.bases};this.send(ws,{type:'result',ok:true,status:'Você está pronto. Aguardando o outro jogador.'});
-      if(this.ready.player&&this.ready.enemy){const a=this.ready.player,b=this.ready.enemy;const start=this.referee.startMultiplayerGame(a.setup,a.bases,b.setup,b.bases,this.matchConfig);if(!start.ok)return this.broadcast({type:'result',ok:false,status:start.status});this.started=true;}
+      if(this.ready.player&&this.ready.enemy){const a=this.ready.player,b=this.ready.enemy;const start=this.referee.startMultiplayerGame(a.setup,a.bases,b.setup,b.bases,this.matchConfig);if(!start.ok)return this.broadcast({type:'result',ok:false,status:start.status});this.started=true;this.resetReplay();}
       await this.persist();this.broadcastRoomState();this.broadcastViews();return;
     }
     if(msg.type==='action'){
       if(!this.started)return this.send(ws,{type:'result',ok:false,status:'A partida ainda não começou.'});
       const action=msg.action||{},fn=actionMap[action.type];if(!fn)return this.send(ws,{type:'result',ok:false,status:'Ação desconhecida.'});
       let res;try{res=fn(this.referee.createClient(side),action);}catch(e){console.error(e);res={ok:false,status:'Erro interno ao resolver a ação.'};}
-      await this.safePersist();this.send(ws,{type:'result',...res});this.broadcastViews();return;
+      if(res?.ok)this.recordReplayAction(side,action);await this.safePersist();this.send(ws,{type:'result',...res});this.broadcastViews();return;
     }
     this.send(ws,{type:'error',message:'Tipo de mensagem desconhecido.'});
   }

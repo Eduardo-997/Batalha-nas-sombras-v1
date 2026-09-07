@@ -4,20 +4,20 @@ __gameRoot.GameRules = (() => {
   const defs = [
     {name:'Arqueiro',icon:'🏹',type:'S',typeIcon:'🗡️',v:1,m:1,a:1,range:3,per:1,ah:0},
     {name:'Ninja',icon:'🗡️',type:'S',typeIcon:'🗡️',v:1,m:2,a:1,range:2,per:1,ah:0},
-    {name:'Piromante',icon:'🔥',type:'S',typeIcon:'🗡️',v:1,m:1,a:1,range:1,per:1,ah:1},
+    {name:'Piromante',icon:'🔥',type:'S',typeIcon:'🗡️',v:1,m:1,a:1,range:1,per:1,ah:2},
     {name:'Kamikaze',icon:'💣',type:'S',typeIcon:'🗡️',v:1,m:1,a:0,range:1,per:1,ah:1},
     {name:'Caçador',icon:'🐾',type:'S',typeIcon:'🗡️',v:1,m:1,a:1,range:1,per:1,ah:1},
-    {name:'Paranoia',icon:'🧠',type:'S',typeIcon:'🗡️',v:1,m:1,a:1,range:1,per:2,ah:0},
+    {name:'Paranoia',icon:'🧠',type:'R',typeIcon:'🛡️',v:2,m:2,a:0,range:1,per:1,ah:2},
     {name:'Escudeiro',icon:'🛡️',type:'R',typeIcon:'🛡️',v:2,m:1,a:0,range:1,per:1,ah:0},
     {name:'Golem',icon:'🗿',type:'R',typeIcon:'🛡️',v:2,m:1,a:0,range:1,per:1,ah:0},
     {name:'Cavaleiro',icon:'🐎',type:'R',typeIcon:'🛡️',v:1,m:3,a:1,range:1,per:1,ah:0},
     {name:'Slime',icon:'🟢',type:'R',typeIcon:'🛡️',v:1,m:1,a:0,range:1,per:1,ah:0},
     {name:'Zumbi',icon:'🧟',type:'R',typeIcon:'🛡️',v:2,m:1,a:1,range:1,per:1,ah:0},
-    {name:'Druida',icon:'🌿',type:'R',typeIcon:'🛡️',v:1,m:1,a:1,range:1,per:1,ah:1},
+    {name:'Druida',icon:'🌿',type:'S',typeIcon:'🗡️',v:1,m:1,a:1,range:1,per:1,ah:1},
     {name:'Vidente',icon:'👁️',type:'P',typeIcon:'📜',v:1,m:1,a:0,range:1,per:1,ah:3},
     {name:'Mago do Espelho',icon:'🔮',type:'P',typeIcon:'📜',v:1,m:1,a:0,range:1,per:1,ah:2},
-    {name:'Necromante',icon:'☠️',type:'P',typeIcon:'📜',v:1,m:1,a:1,range:1,per:1,ah:1},
-    {name:'Doppelgänger',icon:'🎭',type:'P',typeIcon:'📜',v:1,m:1,a:1,range:1,per:1,ah:2},
+    {name:'Necromante',icon:'☠️',type:'P',typeIcon:'📜',v:1,m:2,a:1,range:1,per:1,ah:1},
+    {name:'Doppelgänger',icon:'🎭',type:'P',typeIcon:'📜',v:1,m:2,a:1,range:1,per:1,ah:2},
     {name:'Sentinela',icon:'🦉',type:'P',typeIcon:'📜',v:1,m:2,a:0,range:1,per:1,ah:1},
     {name:'Bardo',icon:'🎵',type:'P',typeIcon:'📜',v:1,m:1,a:0,range:1,per:1,ah:2},
     {name:'Trapaceiro',icon:'🃏',type:'J',typeIcon:'🃏',v:1,m:1,a:0,range:1,per:1,ah:0,diag:true},
@@ -38,7 +38,7 @@ __gameRoot.GameRules = (() => {
     {id:'life',icon:'❤️',name:'Reforço',description:'+1 Vida máxima e +1 Vida atual para uma unidade aliada viva.'},
     {id:'attack',icon:'⚔️',name:'Armamento',description:'+1 ATQ permanente para uma unidade aliada viva.'},
     {id:'range',icon:'🎯',name:'Mira',description:'+1 ALC permanente para uma unidade aliada viva que possua ataque normal.'},
-    {id:'abilityRange',icon:'✨',name:'Canalização',description:'+1 Alc. Hab. permanente para uma unidade com habilidade que use Alcance de Habilidade.'}
+    {id:'abilityRange',icon:'✨',name:'Alc. Hab.',description:'+1 Alc. Hab. permanente para uma unidade com habilidade que use Alcance de Habilidade.'}
   ];
   const rc=c=>({x:c.charCodeAt(0)-65,y:Number(c.slice(1))-1});
   const coord=(x,y)=>String.fromCharCode(65+x)+(y+1);
@@ -94,11 +94,11 @@ __gameRoot.GameRules = (() => {
     }
     return out;
   }
-  function abilityCells(p){
+  function abilityCells(p,includeSelf=false){
     const d=defOf(p),out=[];
     // Na interface, p.ah é o Alc. Hab. final; usar esse valor evita perder bônus temporários na marcação.
     const ah=Number.isFinite(Number(p?.ah))?Number(p.ah):d.ah;
-    for(let y=0;y<8;y++)for(let x=0;x<8;x++){const c=coord(x,y);if(c!==p.coord&&man(p.coord,c)<=ah)out.push(c)}
+    for(let y=0;y<8;y++)for(let x=0;x<8;x++){const c=coord(x,y);if((includeSelf||c!==p.coord)&&man(p.coord,c)<=ah)out.push(c)}
     return out;
   }
   function blastCells(c,ah=1){
