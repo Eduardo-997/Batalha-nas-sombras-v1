@@ -6,7 +6,8 @@
   const ai=referee.createClient('enemy');
   const aiWorker=window.createGameAiWorker();
   const replay=window.GameReplay?new window.GameReplay.Recorder(()=>referee.exportState(),{kind:'classic'}):null;
-  let aiReq=0,aiScheduled=false,aiLastResult=null;
+  let aiReq=0,aiScheduled=false,aiTimer=null,aiAwaiting=null,aiLastResult=null;
+  const checkpoint=window.BNSLocalCheckpoint.create('classic',{coords:Array.from({length:64},(_,i)=>R.coord(i%8,Math.floor(i/8))),names:R.defs.map(d=>d.name)});
 
   const $=s=>document.querySelector(s);
   const roster=$('#roster'),board=$('#board'),historyEl=$('#history'),intelEl=$('#intel'),statusEl=$('#status'),availableEl=$('#available');
@@ -38,28 +39,7 @@
   function restoreClassicDifficulty(){try{const d=localStorage.getItem(CLASSIC_DIFFICULTY_KEY);if(validDifficulty(d)){aiDifficulty=d;if(aiDifficultyEl)aiDifficultyEl.value=d;}}catch{}}
   function saveClassicDifficulty(d){if(!validDifficulty(d))return;aiDifficulty=d;try{localStorage.setItem(CLASSIC_DIFFICULTY_KEY,d);}catch{}}
   let status='Inspecione os personagens e marque ☐ Selecionar para montar a equipe.';
-  const ABILITY_TEXT={
-    "Arqueiro":"Tiro Certeiro: mostra no tabuleiro o alcance dobrado antes de ativar e pede confirmação. Depois de confirmado, o próximo ataque normal usa esse alcance maior naquele turno. Recarga: 1 turno próprio.",
-    "Ninja":"Bomba de Fumaça: ao ativar, fica completamente indetectável por PER, Vidente, armadilha da Sentinela e qualquer efeito de revelação até o fim do próximo turno próprio. Recarga: 2 turnos próprios.",
-    "Piromante":"Rajada Dupla: escolha exatamente 2 casas diferentes dentro do Alc. Hab.; a confirmação aparece após a segunda escolha. Recarga: 1 turno próprio.",
-    "Kamikaze":"Explode ao morrer e também pode usar Autodestruição como habilidade ativa. Antes de confirmar, o jogo mostra toda a área atingida. O Alc. Hab. funciona em anéis ao redor dele: Alc. Hab. 1 atinge o primeiro anel; Alc. Hab. 2 atinge os dois primeiros anéis, e assim por diante. A explosão causa 1 de dano inclusive em aliados.",
-    "Caçador":"Mantém 1 armadilha de dano oculta dentro do Alc. Hab. Pode prepará-la mesmo em uma casa já ocupada; ela não dispara na colocação. Quando um inimigo entrar nessa casa depois, sofre 1 de dano antes de qualquer Confronto Direto. Colocar outra armadilha substitui a anterior.",
-    "Paranoia":"Presença Fantasma: escolha exatamente 2 casas dentro do Alc. Hab. 2. Você vê as presenças; os inimigos não, e a PER inimiga as detecta como se fossem personagens. Se uma presença for atacada, o atacante acredita ter atingido o próprio Paranoia e, no próximo turno, recebe outra detecção falsa sem saber. Em Confronto Direto, a presença não causa dano nem repele: o adversário descobre que era falsa, mas ainda recebe uma detecção falsa conhecida no próximo turno. Máximo de 2 presenças por Paranoia; ao criar novas, as mais antigas desaparecem.",
-    "Escudeiro":"Pode compartilhar casa com 1 aliado. Vincular escolhe um aliado dentro do Alc. Hab.; Alc. Hab. 0 alcança apenas a própria casa. Ao criar o vínculo, o Escudeiro se reúne ao aliado e passa a acompanhar automaticamente seus movimentos. Enquanto vinculado, não se move sozinho; use a habilidade novamente para Desvincular, gastando o turno. Também intercepta ataques e dano em área para proteger o aliado.",
-    "Golem":"Absorver Rocha: consome uma Pedra adjacente. Golem normal recebe 1 de Armadura até o fim do próximo turno próprio; cada dano é reduzido em 1 e dano reduzido a 0 não o transforma. Como Golem de Lava, consumir uma Pedra concede +1 M permanente e cumulativo.",
-    "Cavaleiro":"Não possui habilidade ativa.",
-    "Slime":"Ao cair, divide-se em 2 Mini-Slimes. A perda só conta quando toda a linhagem morrer; os Mini-Slimes herdam seus bônus.",
-    "Zumbi":"Na primeira morte, não conta como eliminação. Levanta-se na rodada seguinte com 1 de Vida e, depois de 3 turnos próprios, cai definitivamente. Se morrer antes disso, a eliminação é imediata.",
-    "Druida":"Pode entrar em árvores vivas e não é detectado por PER enquanto estiver nelas. Desperta uma árvore dentro do Alc. Hab. como Galho-Vivo. O Galho-Vivo é uma unidade própria e usa um turno normal disponível; se o Druida morrer, ele volta a ser uma árvore normal.",
-    "Vidente":"Ao ativar, o tabuleiro mostra todas as casas possíveis dentro do Alc. Hab. Escolha a primeira casa e depois 1 casa adjacente por lado; as 2 ficam reveladas.",
-    "Mago do Espelho":"Cria 1 Espelho dentro do Alc. Hab. A distância é medida em passos ortogonais; com Alc. Hab. 2, uma casa diagonal também fica ao alcance. O Espelho gera falsa presença e reflete o primeiro ataque; criar outro substitui o anterior.",
-    "Necromante":"Ergue um Esqueleto usando um cadáver dentro do Alc. Hab. Limite de 1 Esqueleto vivo por Necromante.",
-    "Doppelgänger":"Ao passar por um cadáver, copia sua habilidade. Habilidades ativas copiadas usam o Alc. Hab. do próprio Doppelgänger; ao encontrar outra, escolhe manter a atual ou trocar.",
-    "Sentinela":"Mantém até 2 armadilhas ocultas dentro do Alc. Hab. Pode prepará-las mesmo em casas já ocupadas; elas não disparam na colocação. Um inimigo que entrar depois em uma delas fica com a posição revelada até o início do próximo turno daquela peça.",
-    "Bardo":"Escolhe 1 aliado dentro do Alc. Hab. e concede +1 ATQ, ALC, Alc. Hab., M ou Vida. Mantém apenas 1 aliado inspirado; o bônus dura até o fim do próximo turno do Bardo.",
-    "Trapaceiro":"Pode se mover pelas diagonais.",
-    "Fantasma":"Ao vencer um ataque ou Confronto Direto, possui o inimigo e passa a controlar aquele corpo com a Vida, atributos e habilidades da peça possuída. O antigo dono perde sua localização. O corpo possuído recebe dano normalmente; quando ele é derrotado, o Fantasma morre e a peça original volta ao dono."
-  };
+  const ABILITY_TEXT=window.BNSCharacterInfo.text;
   const TREE_CELLS=new Set(R.treeCells||['B3','G6']);
   const ROCK_CELLS=new Set(R.rockCells||['F2','C7']);
   const WATER_CELLS=new Set(R.waterCells||['D3','E6']);
@@ -102,7 +82,7 @@
     const oldMir=new Set((prev.ownMirrors||[]).map(m=>m.coord)),newMir=new Set((v.ownMirrors||[]).map(m=>m.coord));for(const c of newMir)if(!oldMir.has(c)){cellFx(c,'fx-summon','🪞','magic');heardMagic=true;}
     if((v.history?.[0]||'')!==(prev.history?.[0]||'')){panelFx(historyEl);const h=v.history?.[0]||'';if(h.includes('Espelho')&&h.includes('reflet')){for(const c of oldMir)if(!newMir.has(c))cellFx(c,'fx-reflect','↩','magic');heardReflect=true;}}
     if((v.intel?.[0]||'')!==(prev.intel?.[0]||'')){panelFx(intelEl);const p=activePiece(v)||activePiece(prev);if(p&&/presença|PER/i.test(v.intel?.[0]||'')){cellFx(p.coord,'fx-perception','◉','magic');heardPerception=true;}}
-    if(v.impactCell&&v.impactCell!==prev.impactCell){cellFx(v.impactCell,'fx-attack','💥','damage');heardHit=true;}
+    for(const c of v.impactCells||[v.impactCell].filter(Boolean))if(!(prev.impactCells||[prev.impactCell]).includes(c)){cellFx(c,'fx-attack','💥','damage');heardHit=true;}
     const oldSeer=new Set(prev.seerArea||[]),newSeer=new Set(v.seerArea||[]);if([...newSeer].some(c=>!oldSeer.has(c))){for(const c of newSeer)cellFx(c,'fx-seer');heardMagic=true;}
     if(prev.turn!==v.turn||prev.round!==v.round){clearFxClass(phaseEl,'fx-turn',680);if(v.turn==='player')Audio.play('turn');}
     if(heardExplosion)Audio.play('explosion');else if(heardHit)Audio.play('hit');else if(heardDeath)Audio.play('death');
@@ -203,7 +183,7 @@
     if(name==='Ninja'&&(p.ninjaSmokeCooldown||0)>0)parts.push(`🌫️ Bomba de Fumaça: ${p.ninjaSmokeCooldown} turno${p.ninjaSmokeCooldown===1?'':'s'}`);
     return parts.length?`<div class="cooldown-note"><b>⏳ Recarga:</b> ${parts.join(' · ')}</div>`:'';
   }
-  function pieceAbilityText(p){const key=p?.copied||p?.displayName||p?.name;return ABILITY_TEXT[key]||ABILITY_TEXT[p?.name]||'Sem habilidade ativa ou característica adicional.';}
+  function pieceAbilityText(p){return window.BNSCharacterInfo.abilityText(p);}
   function showPieceInfo(v,p,enemy=false){
     if(!p)return;
     inspectedPieceId=p.id;
@@ -259,7 +239,7 @@
       const label=baseTargetArea.querySelector('.small.muted');if(label)label.textContent=`Escolha quem recebe ${bonus.icon} ${bonus.name}:`;
       let targets=v.ownPieces.filter(p=>p.alive);
       if(bonus.id==='range')targets=targets.filter(p=>p.a>0);if(bonus.id==='abilityRange')targets=targets.filter(p=>(p.ah||0)>0);
-      for(const t of targets){const b=document.createElement('button');b.type='button';b.className='target-btn';b.innerHTML=`<b>${t.icon} ${t.displayName}${t.original?'':' <span class="muted">(invocação)</span>'}</b><span>V${t.hp}/${t.maxHp} · M${t.m} · ATQ${t.a} · ALC${t.range} · PER${t.per} · Alc. Hab. ${t.ah||0}</span>`;b.addEventListener('click',()=>{const r=player.sabotageBase(base.id,bonus.id,t.id);setStatus(r.status);closeBasePanel();afterMutation();});baseTargetGrid.appendChild(b);}
+      for(const t of targets){const b=document.createElement('button');b.type='button';b.className='target-btn';b.innerHTML=`<b>${window.BNSCharacterInfo.unitHtml(t)}</b><span>V${t.hp}/${t.maxHp} · M${t.m} · ATQ${t.a} · ALC${t.range} · PER${t.per} · Alc. Hab. ${t.ah||0}</span>`;b.addEventListener('click',()=>{const r=player.sabotageBase(base.id,bonus.id,t.id);setStatus(r.status);closeBasePanel();afterMutation();});baseTargetGrid.appendChild(b);}
       baseTargetArea.classList.remove('hidden');setStatus(`Escolha qual personagem recebe ${bonus.icon} ${bonus.name}.`);return;
     }
     const r=player.sabotageBase(base.id,bonus.id,null);setStatus(r.status);closeBasePanel();afterMutation();
@@ -394,7 +374,7 @@
     if(mode==='attack'){setActionVisual(attackBtn,true,true);setActionVisual(endBtn,canEnd,false);setActionVisual(cancelBtn,true,false);return;}
     if(mode){setActionVisual(abilityBtn,true,true);setActionVisual(endBtn,canEnd,false);setActionVisual(cancelBtn,true,false);return;}
     const canMove=!a.movementUsed&&Number(p.m||0)>0&&!p.linkedToId;
-    const canAttack=Number(p.a||0)>0||p.name==='Fantasma'||p.identity==='Fantasma';
+    const canAttack=Number(p.a||0)>0||(p.name==='Fantasma'&&!p.possessing);
     setActionVisual(moveBtn,canMove,false);setActionVisual(stopBtn,false,false);setActionVisual(attackBtn,canAttack,false);setActionVisual(abilityBtn,canUseAbilityNow(v,p),false);setActionVisual(endBtn,canEnd,false);setActionVisual(cancelBtn,!a.committed,false);
   }
 
@@ -429,15 +409,15 @@
           if(ordered[1]){const s2=document.createElement('span');s2.className=`stack-second art-stack shared-stack${ordered[1].activated?' spent-stack':''}`;const src=A.character?.(ordered[1].displayName||ordered[1].name);if(src)s2.appendChild(A.img(src,'piece-art',ordered[1].displayName||ordered[1].name));else s2.textContent=ordered[1].icon;s2.title=ordered[1].displayName||ordered[1].name;b.appendChild(s2);}
         }
         const eg=visibleGroups.get(c)||[];if(eg.length){const m=makePieceToken(eg[0],true);m.classList.add('marker','enemy-reveal');b.appendChild(m);addHpBadge(b,eg[0],true);if(eg[1]){const m2=document.createElement('span');m2.className='stack-second';m2.textContent=eg[1].icon;b.appendChild(m2);}}if(eg.length&&!seer.has(c)){const rm=A.img?.(A.effects?.revelada,'marker-art reveal-marker','Unidade revelada')||document.createElement('span');if(!rm.src){rm.className='marker reveal-marker';rm.textContent='👁️';}rm.title='Unidade revelada';appendCornerMarker(b,rm,'tl');}
-        if(v.impactCell===c){const m=A.img?.(A.effects?.dano,'marker-art','Dano')||document.createElement('span');if(!m.src){m.className='marker impact';m.textContent='💥';}appendCornerMarker(b,m,'bl');}if((v.combatCells||[]).includes(c)){const m=A.img?.(A.effects?.confronto,'marker-art','Confronto')||document.createElement('span');if(!m.src){m.className='marker combat-mark';m.textContent='⚔️';}m.title='Confronto Direto ocorreu aqui';appendCornerMarker(b,m,'br');}
+        if((v.impactCells||[v.impactCell]).includes(c)){const m=A.img?.(A.effects?.dano,'marker-art','Dano')||document.createElement('span');if(!m.src){m.className='marker impact';m.textContent='💥';}appendCornerMarker(b,m,'bl');}if((v.combatCells||[]).includes(c)){const m=A.img?.(A.effects?.confronto,'marker-art','Confronto')||document.createElement('span');if(!m.src){m.className='marker combat-mark';m.textContent='⚔️';}m.title='Confronto Direto ocorreu aqui';appendCornerMarker(b,m,'br');}
         for(const h of v.perceptionHints||[])if(h.coord===c){const m=document.createElement('span');m.className=`presence-hint ${h.kind||'orth'}`;m.textContent=h.kind==='exact'?'📍':h.kind==='diag'?'◇':'❗';m.title=h.knownFalse?'Detecção falsa conhecida — Eco da Presença Fantasma':h.kind==='exact'?'Presença detectada nesta casa':h.kind==='diag'?'Possível presença diagonal':'Possível presença ortogonal';if(h.knownFalse)m.classList.add('known-false');appendCornerMarker(b,m,'tr');}
       }
       const p=activePiece(v),a=v.activation;
       if(p&&v.turn==='player'&&!v.pendingCombat){
         if(a.mode==='move'&&a.moveRemaining>=(p.flying?1:(SWAMP_CELLS.has(c)?2:1))&&R.neighbors(p.coord,p.diag).includes(c)&&canShareUi(v,p,c)){const solid=(v.rocks||[]).includes(c)||!!(v.trees||[]).find(t=>t.coord===c&&t.state==='live');if(!(p.flying&&solid&&a.moveRemaining<=1))b.classList.add('highlight');}
         if(a.mode==='attack'&&R.attackCells(p).includes(c)&&!baseAt(v,c))b.classList.add('attack-highlight');
-        if(a.mode==='pyro'&&R.abilityCells(p).includes(c))b.classList.add('attack-highlight');
-        if(a.mode==='sureShotConfirm'&&R.attackCells({...p,range:(p.range||0)*2}).includes(c))b.classList.add('attack-highlight');
+        if(a.mode==='pyro'&&R.abilityCells(p).includes(c)&&!baseAt(v,c))b.classList.add('attack-highlight');
+        if(a.mode==='sureShotConfirm'&&R.attackCells({...p,range:(p.range||0)*2}).includes(c)&&!baseAt(v,c))b.classList.add('attack-highlight');
         if(a.mode==='paranoiaPresence'&&R.abilityCells(p,true).includes(c))b.classList.add('highlight');
         // Ao entrar em qualquer habilidade, a casa da própria unidade também aparece como origem.
         const abilityModes=['pyro','sureShotConfirm','paranoiaPresence','raise','mirror','awaken','spotTrap','damageTrap','bard','absorbRock','seer','kamikaze','shieldLink','shieldUnlink'];
@@ -467,14 +447,14 @@
     refreshPieceInfo(v);paint(v);renderTurnGuide(v);renderActionButtons(v);
     flushActionFx(v);applyStateFx(previousFxView,v);previousFxView=snapshotFx(v);
     combatChoice.classList.toggle('hidden',!v.pendingCombat);
-    doppelChoiceBox.classList.toggle('hidden',!v.doppelChoice);if(v.doppelChoice)doppelChoiceText.textContent=`Atual: ${v.doppelChoice.current} · Novo: ${v.doppelChoice.newAbility}`;
+    doppelChoiceBox.classList.toggle('hidden',!v.doppelChoice);if(v.doppelChoice){copyDoppelBtn.disabled=v.doppelChoice.canCopyNew===false;doppelChoiceText.textContent=`Atual: ${v.doppelChoice.current} · Novo: ${v.doppelChoice.newAbility}${v.doppelChoice.reason?' · '+v.doppelChoice.reason:''}`;}
     advanceCombatBtn.disabled=v.pendingCombat?.canAdvance===false;
     advanceCombatBtn.textContent=v.pendingCombat?.canAdvance===false?'Posição ocupada':'Posição da derrotada';
     pyroConfirm.classList.toggle('hidden',v.activation?.mode!=='pyro'||(v.activation?.pyroTargets||[]).length!==2);kamikazeBox.classList.toggle('hidden',v.activation?.mode!=='kamikaze');sureShotBox.classList.toggle('hidden',v.activation?.mode!=='sureShotConfirm');paranoiaBox.classList.toggle('hidden',v.activation?.mode!=='paranoiaPresence');if(v.activation?.mode==='paranoiaPresence')paranoiaChoiceText.textContent=`${(v.activation.paranoiaTargets||[]).length}/2 casas escolhidas. Máximo 2 presenças ativas por Paranoia.`;const sa=v.activation;let shieldTarget=null;if(sa?.mode==='shieldLink'&&pendingShieldTargetId)shieldTarget=v.ownPieces.find(x=>x.id===pendingShieldTargetId);if(sa?.mode==='shieldUnlink'){shieldConfirmTitle.textContent='🛡️ Confirmar desvinculação';shieldConfirmText.textContent='Desvincular gastará o turno do Escudeiro.';shieldConfirmBox.classList.remove('hidden');}else if(sa?.mode==='shieldLink'&&shieldTarget){shieldConfirmTitle.textContent='🛡️ Confirmar vínculo';shieldConfirmText.textContent=`Vincular a ${shieldTarget.displayName}. O Escudeiro irá até a casa do aliado e passará a acompanhá-lo.`;shieldConfirmBox.classList.remove('hidden');}else shieldConfirmBox.classList.add('hidden');
     if(v.gameOver){setStatus(v.result==='player'?'Você venceu.':v.result==='enemy'?'Você perdeu.':'Empate.');const win=v.result==='player',draw=v.result==='draw',cfg=v.matchConfig||currentMatchConfig();Presentation.showEndScreen({key:`classic:${v.result}:${v.round}`,mode:'classic',result:v.result,icon:draw?'⚖️':win?'🏆':'☠️',title:draw?'EMPATE':win?'VITÓRIA':'DERROTA',tone:draw?'draw':win?'victory':'defeat',reason:v.surrenderedBy?(v.surrenderedBy==='player'?'Você desistiu da partida.':'O adversário desistiu da partida.'):draw?'As duas equipes chegaram ao próprio limite de perdas na mesma resolução.':win?`O adversário atingiu ${cfg.lossLimit.enemy} perdas originais.`:`Você atingiu ${cfg.lossLimit.player} perdas originais.`,round:v.round,summary:[{label:'Suas perdas',value:`${v.ownOriginalDeaths}/${cfg.lossLimit.player}`},{label:'Perdas inimigas',value:`${v.enemyOriginalDeaths}/${cfg.lossLimit.enemy}`},{label:'Rodadas disputadas',value:v.round}],onReplay:replay&&replay.length>1?()=>window.GameReplay.open(replay.frames(),{title:'Replay do Clássico'}):null});}
     else {Presentation.hideEndScreen();if(v.turn==='enemy'&&!v.pendingCombat)statusEl.textContent='🤖 Vez da IA...'; else statusEl.textContent=status;}
     if(replayBtn)replayBtn.classList.toggle('hidden',!(v.gameOver&&replay&&replay.length>1));if(surrenderBtn)surrenderBtn.classList.toggle('hidden',v.phase!=='play'||v.gameOver);
-    return v;
+    saveLocalGame();return v;
   }
 
   function toggleSetupCharacter(d){
@@ -563,25 +543,26 @@
     seerPreview=new Set([main,c]);seerConfirm.classList.remove('hidden');setStatus('2/2 casas selecionadas. Confirme a visão.');render();
   }
 
-  function showBardChoice(input){const targets=Array.isArray(input)?input:[input];bardChoiceButtons.innerHTML='';if(targets.length>1){bardChoiceText.textContent='Há duas unidades nesta casa. Quem receberá a Inspiração?';for(const target of targets){const b=document.createElement('button');b.type='button';b.textContent=`${target.icon} ${target.displayName}`;b.addEventListener('click',()=>showBardChoice(target));bardChoiceButtons.appendChild(b);}bardChoiceBox.classList.remove('hidden');return;}const target=targets[0];bardChoiceText.textContent=`${target.icon} ${target.displayName} — escolha o bônus até o fim do próximo turno do Bardo.`;for(const [stat,label] of [['attack','⚔️ +1 ATQ'],['range','🎯 +1 ALC'],['abilityRange','✨ +1 Alc. Hab.'],['move','👣 +1 M'],['life','❤️ +1 Vida']]){const b=document.createElement('button');b.type='button';b.textContent=label;b.addEventListener('click',()=>{bardChoiceBox.classList.add('hidden');const r=player.bardBuff(target.id,stat);setStatus(r.status);afterMutation();});bardChoiceButtons.appendChild(b);}bardChoiceBox.classList.remove('hidden');}
+  function showBardChoice(input){const targets=Array.isArray(input)?input:[input];bardChoiceButtons.innerHTML='';if(targets.length>1){bardChoiceText.textContent='Há duas unidades nesta casa. Quem receberá a Inspiração?';for(const target of targets){const b=document.createElement('button');b.type='button';b.textContent=`${window.BNSCharacterInfo.unitLabel(target)}`;b.addEventListener('click',()=>showBardChoice(target));bardChoiceButtons.appendChild(b);}bardChoiceBox.classList.remove('hidden');return;}const target=targets[0];bardChoiceText.textContent=`${window.BNSCharacterInfo.unitLabel(target)} — escolha o bônus até o fim do próximo turno do Bardo.`;for(const [stat,label] of [['attack','⚔️ +1 ATQ'],['range','🎯 +1 ALC'],['abilityRange','✨ +1 Alc. Hab.'],['move','👣 +1 M'],['life','❤️ +1 Vida']]){const b=document.createElement('button');b.type='button';b.textContent=label;b.addEventListener('click',()=>{bardChoiceBox.classList.add('hidden');const r=player.bardBuff(target.id,stat);setStatus(r.status);afterMutation();});bardChoiceButtons.appendChild(b);}bardChoiceBox.classList.remove('hidden');}
   function hideBardChoice(){bardChoiceBox.classList.add('hidden');bardChoiceButtons.innerHTML='';}
 
   function afterMutation(){
-    hideBardChoice();const v=render(),av=ai.getView();if(replay)replay.capture(v.history?.[0]||'Ação do jogador');
+    hideBardChoice();const v=render(),av=ai.getView();if(replay)replay.capture(v.history?.[0]||'Ação do jogador');saveLocalGame();
     if(!v.gameOver&&(av.pendingCombat||av.doppelChoice||v.turn==='enemy'))scheduleAi(850);
   }
 
   function scheduleAi(delay=180){
-    if(aiScheduled)return;aiScheduled=true;setTimeout(()=>{aiScheduled=false;runAiStep();},delay);
+    if(aiScheduled)return;aiScheduled=true;const generation=aiReq;aiTimer=setTimeout(()=>{if(generation!==aiReq)return;aiTimer=null;aiScheduled=false;runAiStep();},delay);
   }
+  function cancelAi(){clearTimeout(aiTimer);aiTimer=null;aiScheduled=false;aiAwaiting=null;aiLastResult=null;aiReq++;aiWorker.postMessage({type:'reset'});}
   function runAiStep(){
     const pv=view(),av=ai.getView();if(pv.gameOver||av.gameOver)return;
     if(!av.pendingCombat&&!av.doppelChoice&&av.turn!=='enemy')return;
-    const id=++aiReq;aiWorker.postMessage({id,view:av,lastResult:aiLastResult,difficulty:aiDifficulty});
+    const id=++aiReq;aiAwaiting=id;aiWorker.postMessage({id,view:av,lastResult:aiLastResult,difficulty:aiDifficulty});
   }
   aiWorker.onmessage=e=>{
-    const {action}=e.data||{};if(!action)return;
-    const av=ai.getView();if(av.gameOver)return;if(!av.pendingCombat&&av.turn!=='enemy')return;
+    const {id,action}=e.data||{};if(!action||id!==aiAwaiting||id!==aiReq)return;aiAwaiting=null;
+    const av=ai.getView();if(av.gameOver)return;if(!av.pendingCombat&&!av.doppelChoice&&av.turn!=='enemy')return;
     let r;
     switch(action.type){
       case 'select': r=ai.selectPiece(action.pieceId);break;
@@ -603,7 +584,7 @@
       default:r={ok:true,status:'IA aguardando.'};
     }
     aiLastResult={action:{...action},ok:r?.ok!==false,status:r?.status||''};
-    const pv=render();if(replay){const postAi=ai.getView();replay.capture(postAi.history?.[0]||'Ação da IA');}
+    const pv=render();if(replay){const postAi=ai.getView();replay.capture(postAi.history?.[0]||'Ação da IA');}saveLocalGame();
     if(pv.pendingCombat||pv.gameOver)return;
     if(pv.turn==='enemy')scheduleAi(300);
     else if(pv.turn==='player')setStatus(`Rodada ${pv.round}. Selecione sua próxima peça disponível.`),render();
@@ -619,7 +600,7 @@
   keepDoppelBtn.addEventListener('click',()=>{const r=player.chooseDoppelCopy(false);setStatus(r.status);render();});
   copyDoppelBtn.addEventListener('click',()=>{const r=player.chooseDoppelCopy(true);setStatus(r.status);render();});
 
-  resetBtn.addEventListener('click',()=>{const keepSelected=[...selected],keepPos=new Map(setupPos),keepBases=new Map(setupBasePos),keepDifficulty=aiDifficultyEl?.value||aiDifficulty||'normal';if(replay)replay.clear();previousFxView=null;pendingActionFx=[];aiLastResult=null;aiDifficulty=keepDifficulty;if(aiDifficultyEl)aiDifficultyEl.value=keepDifficulty;referee.reset();selected=keepSelected;setupSelected=null;setupBaseSelected=null;setupPos=keepPos;setupBasePos=keepBases;openedBaseId=null;pendingBaseBonusId=null;pendingShieldTargetId=null;closeBasePanel();seerPreview.clear();seerConfirm.classList.add('hidden');pyroConfirm.classList.add('hidden');hideStackChoice();hideBardChoice();combatChoice.classList.add('hidden');rosterCollapsed=false;rosterFilter='all';filterButtons.forEach(b=>b.classList.toggle('active',b.dataset.filter==='all'));inspectedPieceId=null;pieceInfoTitle.textContent='Ficha da unidade';pieceInfoBody.innerHTML='<div class="muted empty-inspector">Clique em uma peça para ver vida, movimento, ataque, alcance, percepção e bônus.</div>';if(setupInspector){setupInspector.classList.add('hidden');setupInspectorBody.innerHTML='';}setStatus('Formação anterior restaurada. Ajuste se quiser e clique em ✓ Pronto para jogar novamente.');render();});
+  resetBtn.addEventListener('click',()=>{cancelAi();checkpoint.clear();const keepSelected=[...selected],keepPos=new Map(setupPos),keepBases=new Map(setupBasePos),keepDifficulty=aiDifficultyEl?.value||aiDifficulty||'normal';if(replay)replay.clear();previousFxView=null;pendingActionFx=[];aiLastResult=null;aiDifficulty=keepDifficulty;if(aiDifficultyEl)aiDifficultyEl.value=keepDifficulty;referee.reset();selected=keepSelected;setupSelected=null;setupBaseSelected=null;setupPos=keepPos;setupBasePos=keepBases;openedBaseId=null;pendingBaseBonusId=null;pendingShieldTargetId=null;closeBasePanel();seerPreview.clear();seerConfirm.classList.add('hidden');pyroConfirm.classList.add('hidden');hideStackChoice();hideBardChoice();combatChoice.classList.add('hidden');rosterCollapsed=false;rosterFilter='all';filterButtons.forEach(b=>b.classList.toggle('active',b.dataset.filter==='all'));inspectedPieceId=null;pieceInfoTitle.textContent='Ficha da unidade';pieceInfoBody.innerHTML='<div class="muted empty-inspector">Clique em uma peça para ver vida, movimento, ataque, alcance, percepção e bônus.</div>';if(setupInspector){setupInspector.classList.add('hidden');setupInspectorBody.innerHTML='';}setStatus('Formação anterior restaurada. Ajuste se quiser e clique em ✓ Pronto para jogar novamente.');render();});
   if(surrenderBtn)surrenderBtn.addEventListener('click',()=>{const v=view();if(v.phase!=='play'||v.gameOver)return;if(!confirm('Desistir da partida? A partida será encerrada e o Replay ficará disponível.'))return;const r=player.surrender();setStatus(r.status);if(r.ok&&replay)replay.capture('🏳️ Desistência');render();});
   moveBtn.addEventListener('click',()=>{const r=player.startMove();setStatus(r.status);render();});
   stopBtn.addEventListener('click',()=>{const r=player.stopMove();setStatus(r.status);afterMutation();});
@@ -649,6 +630,30 @@
   for(const el of [playerTeamSizeEl,enemyTeamSizeEl,playerLossLimitEl,enemyLossLimitEl])if(el)el.addEventListener('change',syncMatchSettings);
   if(resetMatchSettingsBtn)resetMatchSettingsBtn.addEventListener('click',()=>{playerTeamSizeEl.value=4;enemyTeamSizeEl.value=4;playerLossLimitEl.value=3;enemyLossLimitEl.value=3;syncMatchSettings();setStatus('Configurações padrão restauradas: 4 × 4 e 3 perdas para derrota.');});
 
+  function saveLocalGame(){
+    if(view().phase!=='play')return;
+    return checkpoint.write(referee.exportState(),{frames:replay?.items||[],meta:{selected:[...selected],positions:[...setupPos],bases:[...setupBasePos],difficulty:aiDifficulty,seer:[...seerPreview],shield:pendingShieldTargetId,replayPartial:!!replay?.partial}});
+  }
+  function restoreLocalGame(){
+    const saved=checkpoint.read();if(!saved)return false;
+    const before=referee.exportState();
+    try{
+      referee.importState(saved.state);const v=view(),m=saved.meta||{};
+      const validCoord=c=>typeof c==='string'&&/^[A-H][1-8]$/.test(c);
+      if(!Array.isArray(m.selected)||m.selected.length!==v.matchConfig.teamSize.player||new Set(m.selected).size!==m.selected.length||m.selected.some(n=>!R.defs.some(d=>d.name===n))||!Array.isArray(m.positions)||m.positions.length!==m.selected.length||m.positions.some(p=>!Array.isArray(p)||p.length!==2||!validCoord(p[0])||!m.selected.includes(p[1]))||new Set(m.positions.map(p=>p[1])).size!==m.selected.length||!Array.isArray(m.bases)||m.bases.length!==2||m.bases.some(p=>!Array.isArray(p)||p.length!==2||![1,2].includes(p[0])||!validCoord(p[1]))||new Set(m.bases.map(p=>p[0])).size!==2||new Set([...m.positions.map(p=>p[0]),...m.bases.map(p=>p[1])]).size!==m.positions.length+2)throw new Error('Formação inválida.');
+      selected=[...m.selected];setupPos=new Map(m.positions);setupBasePos=new Map(m.bases);
+      aiDifficulty=validDifficulty(m.difficulty)?m.difficulty:'normal';if(aiDifficultyEl)aiDifficultyEl.value=aiDifficulty;
+      const cfg=v.matchConfig;for(const [el,n]of [[playerTeamSizeEl,cfg.teamSize.player],[enemyTeamSizeEl,cfg.teamSize.enemy],[playerLossLimitEl,cfg.lossLimit.player],[enemyLossLimitEl,cfg.lossLimit.enemy]])if(el)el.value=n;
+      seerPreview=new Set(v.activation?.mode==='seer'&&Array.isArray(m.seer)?m.seer.filter(c=>R.abilityCells(activePiece(v),true).includes(c)).slice(0,2):[]);
+      seerConfirm.classList.toggle('hidden',seerPreview.size!==2);
+      pendingShieldTargetId=v.activation?.mode==='shieldLink'&&v.ownPieces.some(p=>p.alive&&p.id===m.shield)?m.shield:null;
+      if(replay){replay.restore(saved.frames,saved.replayTruncated);replay.capture('Partida recuperada após atualizar a página');}
+      setStatus(saved.replayTruncated?'Partida local recuperada. O replay salvo contém apenas o trecho mais recente.':'Partida local recuperada nesta aba.');
+      return true;
+    }catch{referee.importState(before);selected=[];setupPos=new Map();setupBasePos=new Map();checkpoint.clear();return false;}
+  }
+  window.addEventListener('pagehide',saveLocalGame);
   restoreClassicDifficulty();
-  buildBoard();render();
+  const resumed=restoreLocalGame();buildBoard();render();
+  if(resumed){const av=ai.getView();if(!av.gameOver&&(av.pendingCombat||av.doppelChoice||av.turn==='enemy'))scheduleAi(300);}
 })();

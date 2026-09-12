@@ -32,6 +32,11 @@ body{line-height:1.42}
 }
 .brand-block{flex:1 1 275px;min-width:240px;padding:2px 0}
 .brand-block h1{line-height:1.1}
+.game-version{display:block;margin-top:5px;color:#c9b68f;font-size:11px;font-weight:600;font-family:Inter,Segoe UI,Arial,sans-serif;letter-spacing:.03em}
+/* SVG focus uses the actual cell stroke, never its rectangular bounding box.
+   Kept in the stylesheet too: keyboard focus stays correct before JS starts. */
+.mode-arena .board-svg,.mode-arena .board-svg *{outline:none!important;box-shadow:none!important}
+.mode-arena .tri-cell:focus,.mode-arena .tri-cell.keyboard-focus{stroke:#fff2a8!important;stroke-width:4!important}
 .brand-block .header-sub{max-width:620px;color:#b8ad9b!important}
 .topbar-actions{flex:1 1 620px;justify-content:flex-end!important;align-items:center!important}
 .topbar-actions>a,.topbar-actions>button,.topbar-actions>.ai-difficulty,.topbar-actions>.audio-controls{min-height:38px}
@@ -304,16 +309,15 @@ button:not(:disabled):active,a.mode-btn:active,a.toplink:active,.btn:active{tran
 @media(max-width:600px){
   .mode-classic .board-scroll,.mode-online .board-scroll,.mode-training .board-scroll{overflow-x:hidden!important;width:100%;padding:6px!important}
   .mode-classic .board,.mode-online .board,.mode-training .board{
-    --bns-cell:calc((100vw - 72px)/8);
     --bns-axis:22px;
     --bns-gap:2px;
     width:100%!important;
     max-width:100%!important;
-    grid-template-columns:var(--bns-axis) repeat(8,minmax(0,var(--bns-cell)))!important;
+    grid-template-columns:var(--bns-axis) repeat(8,minmax(0,1fr))!important;
     gap:var(--bns-gap)!important;
   }
-  .mode-classic .cell,.mode-online .cell,.mode-training .cell{width:var(--bns-cell)!important;height:var(--bns-cell)!important;min-width:0!important;font-size:clamp(16px,5.2vw,22px)!important;border-radius:6px!important}
-  .mode-classic .rowaxis,.mode-online .rowaxis,.mode-training .rowaxis{width:var(--bns-axis)!important;height:var(--bns-cell)!important}
+  .mode-classic .cell,.mode-online .cell,.mode-training .cell{width:100%!important;height:auto!important;aspect-ratio:1/1;min-width:0!important;font-size:clamp(16px,5.2vw,22px)!important;border-radius:6px!important}
+  .mode-classic .rowaxis,.mode-online .rowaxis,.mode-training .rowaxis{width:var(--bns-axis)!important;height:auto!important;align-self:stretch}
   .mode-classic .axis,.mode-online .axis,.mode-training .axis{font-size:9px!important}
   .mode-classic .base-icon,.mode-online .base-icon,.mode-training .base-icon{font-size:clamp(15px,4.8vw,20px)!important}
   .mode-classic .base-label,.mode-online .base-label,.mode-training .base-label{font-size:6px!important;padding:0 1px!important}
@@ -324,7 +328,7 @@ button:not(:disabled):active,a.mode-btn:active,a.toplink:active,.btn:active{tran
   .mode-classic .controls button,.mode-online .controls button,.mode-training .controls button{font-size:11px!important;padding:7px 4px!important}
 }
 @media(max-width:390px){
-  .mode-classic .board,.mode-online .board,.mode-training .board{--bns-cell:calc((100vw - 62px)/8);--bns-axis:18px}
+  .mode-classic .board,.mode-online .board,.mode-training .board{--bns-axis:18px}
 }
 
 
