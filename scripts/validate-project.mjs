@@ -50,7 +50,7 @@ for(const [,name] of characterMap[1].matchAll(/'([^']+)'\s*:/g)){
 assert.ok(read('public/assets.js').includes(`?v=${version}`),'Cache de assets fora da versão do pacote');
 for(const page of ['index.html','multiplayer.html','triplayer.html']){
   const html=read('public/'+page),button=html.indexOf('id="surrenderBtn"'),cancel=html.indexOf(page==='triplayer.html'?'id="cancelBtn"':'id="cancel"');
-  assert.ok(button>cancel&&cancel>=0,'Rendição deve ficar depois das ações em '+page);
+  assert.ok(button>cancel&&cancel>=0&&html.slice(cancel,button).includes('class="surrender-zone"'),'Rendição deve ficar separada das ações em '+page);
 }
 console.log(JSON.stringify({javascriptSyntax:js,localHtmlReferences:refs,missingReferences:0,duplicateHtmlIds:0,workerParity:true,arenaParity:true,aiBundleParity:true},null,2));
 console.log(JSON.stringify({dynamicAssetReferences:assetReferences,assetCacheVersion:version,surrenderPlacement:true},null,2));
@@ -61,7 +61,7 @@ console.log(JSON.stringify({generalBrainParity:true,generalModePages:1},null,2))
 for(const[source,target,namespace,imports]of [
   ['classic-ai.mjs','classic-ai-global.js','ClassicBrains',null],
   ['generals-core.mjs','generals-core-global.js','GeneralGame','const {createClassicBrain}=window.ClassicBrains;'],
-  ['generals-ui.mjs','generals-ui-global.js',null,'const {GENERAL_SIDES,defaultGeneralControl,makeGeneralBrains,brainSnapshots,generalStep,applyGeneralAction}=window.GeneralGame;']
+  ['generals-ui.mjs','generals-ui-global.js',null,'const {GENERAL_SIDES,defaultGeneralControl,makeGeneralBrains,brainSnapshots,generalStep,applyGeneralAction,applyGeneralRecord,finishGeneralObservation}=window.GeneralGame;']
 ]){
   let body=read('public/'+source);const names=[...body.matchAll(/^export (?:const|function) (\w+)/gm)].map(m=>m[1]);body=body.replace(/^export /gm,'');if(imports)body=body.replace(/^import [^\n]+;\n/,imports+'\n');
   assert.equal(read('public/'+target),'(function(){\n'+body+(namespace?'\nwindow.'+namespace+'={'+names.join(',')+'};':'')+'\n})();\n','Bundle de Generais fora de sincronia: '+target);
