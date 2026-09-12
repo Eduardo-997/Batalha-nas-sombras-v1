@@ -693,6 +693,7 @@ __refRoot.GameReferee = class GameReferee {
     const bad=this.#validateTurn(side); if(bad)return bad;
     const p=this.#activePiece(side);if(!p)return this.#fail('Selecione uma peça.');
     const a=this.#activation(side);if(a?.mode==='move'&&this.#R.defOf(p)?.flying&&this.#solidTerrain(p.coord))return this.#fail('Voador precisa sair da Árvore ou Pedra antes de encerrar o turno.');
+    if(a?.mode==='move'&&a.committed&&Number(a.moveRemaining||0)>0)return this.#fail('Primeiro use Parar movimento antes de encerrar o turno.');
     this.#commit(side);return this.#finishActivation(side);
   }
 
@@ -788,13 +789,20 @@ __refRoot.GameReferee = class GameReferee {
       let doAdvance=!!advance;
       if(!protectedAlly&&doAdvance&&this.#piecesAt(this.#other(side),p.deadCell).length)doAdvance=false;
       if(protectedAlly&&doAdvance){const blockers=this.#piecesAt(side,p.ownCell).filter(x=>x.id!==winner.id);if(blockers.length)doAdvance=false;}
-      winner.coord=doAdvance?p.deadCell:p.ownCell;const linkedShield=this.#linkedShieldFor(winner);if(linkedShield?.alive&&linkedShield.coord===p.ownCell)linkedShield.coord=winner.coord;
+      winner.coord=doAdvance?p.deadCell:p.ownCell;
       if(protectedAlly&&protectedAlly.alive){
         const allyDest=doAdvance?p.ownCell:p.deadCell;
         const enemyBlock=this.#piecesAt(side,allyDest).some(x=>x.id!==winner.id);
         if(!enemyBlock)protectedAlly.coord=allyDest;
         else {winner.coord=p.ownCell;protectedAlly.coord=p.deadCell;}
       }
+      // O vínculo não pode terminar com Escudeiro e aliado em casas diferentes.
+      // Se o vencedor for o aliado seguido, leva o Escudeiro; se o próprio Escudeiro
+      // vinculado vencer e avançar, leva também o alvo do vínculo.
+      const linkedShield=this.#linkedShieldFor(winner);
+      if(linkedShield?.alive&&linkedShield.coord===p.ownCell)linkedShield.coord=winner.coord;
+      const linkedTarget=winner.linkedToId?this.#pieceById(side,winner.linkedToId):null;
+      if(linkedTarget?.alive&&linkedTarget.coord===p.ownCell)linkedTarget.coord=winner.coord;
       this.#checkDoppel(side,winner);
     }
     const after=p.afterSide;this.#s.pendingCombat=null;return this.#finishActivation(after);
