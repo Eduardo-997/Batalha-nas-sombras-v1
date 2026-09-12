@@ -363,9 +363,9 @@ function bestPyroTargets(view,p){
 
 function bestSeerArea(view,p){
   const visSet=new Set((view.visibleOpponents||[]).map(e=>e.coord));let best=null;
-  const mains=p?abilityCells(p):CELLS;
+  const mains=p?[p.coord,...abilityCells(p)]:CELLS,legal=new Set(mains);
   for(const main of mains){
-    const ns=neighbors(main,false);if(!ns.length)continue;
+    const ns=neighbors(main,false).filter(c=>legal.has(c));if(!ns.length)continue;
     const second=[...ns].sort((a,b)=>(heat(b)+(memory.contacts[b]?0.45:0)-(visSet.has(b)?1:0))-(heat(a)+(memory.contacts[a]?0.45:0)-(visSet.has(a)?1:0)))[0];
     if(!second)continue;const cells=[main,second];let score=0;
     for(const c of cells){score+=heat(c)*2.4;if(memory.contacts[c])score+=1.1;if(visSet.has(c))score-=2.5;}
@@ -618,8 +618,7 @@ function decide(view,lastResult){
     const picked=Array.isArray(a.pyroTargets)?a.pyroTargets:[],targets=bestPyroTargets(view,p).filter(c=>!picked.includes(c));
     if(picked.length>=2)return {type:'pyroConfirm'};
     if(!picked.length){const to=targets[0];return to?{type:'pyroSelect',to}:{type:'end'};}
-    if(targets.length&&heat(targets[0])>0.24)return {type:'pyroSelect',to:targets[0]};
-    return {type:'pyroConfirm'};
+    return targets.length?{type:'pyroSelect',to:targets[0]}:{type:'end'};
   }
   if(a.mode==='paranoiaPresence'){
     const picked=Array.isArray(a.paranoiaTargets)?a.paranoiaTargets:[];
